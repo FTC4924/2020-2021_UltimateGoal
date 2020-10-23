@@ -115,6 +115,10 @@ public class VuforiaSteering extends OpMode {
 
     public void init() {
 
+        middlePower = 0;
+        leftPower = 0;
+        rightPower = 0;
+
         webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
 
         middleMotor = hardwareMap.get(DcMotor.class, "middleWheelMotor");
@@ -206,10 +210,89 @@ public class VuforiaSteering extends OpMode {
         leftPower = 0;
         rightPower = 0;
 
+        camPosition = camMotor.getCurrentPosition();
+        telemetry.addData("Cam Position", camPosition);
+
+        /*if (gamepad2.left_stick_y > 0.01 || gamepad2.left_stick_y < -0.01) {
+
+            camMotor.setPower(gamepad2.left_stick_y/3);
+
+        } else {
+
+            camMotor.setPower(0.0);
+
+        }*/
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        currentAngle = angles.firstAngle;
+
+        targetVisible = false;
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+                //telemetry.addData("Visible Target", trackable.getName());
+                targetVisible = true;
+
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+                }
+                break;
+            }
+        }
+
+        if (targetVisible) {
+
+            VectorF translation = lastLocation.getTranslation();
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+
+            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+            telemetry.addData("Needed Angle", Math.toDegrees(Math.atan(translation.get(0) / translation.get(2))));
+            neededAngle = Math.toDegrees(Math.atan(translation.get(0) / translation.get(2)));
+            error = currentAngle - neededAngle;
+
+            telemetry.addData("Error Value", error);
+
+            if (gamepad2.b) {
+
+                if (Math.abs(error) > 3) {
+
+                    rightPower = error * 1/70;
+                    leftPower = -error * 1/70;
+
+                } else {
+
+                    rightPower = 0.0;
+                    leftPower = 0.0;
+                }
+            }
+
+            neededAngle = Math.toDegrees(Math.atan(35/Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2),2))));
+            neededPosition = (int)(neededAngle * 21.2 - 8);
+            telemetry.addData("Needed Cam Angle", neededAngle);
+            telemetry.addData("Needed Cam Position", neededPosition);
+            if(gamepad2.a){
+                camMotor.setTargetPosition(neededPosition);
+            }
+            telemetry.addData("Cam Motor Target Position", camMotor.getTargetPosition());
+        }
+        else {
+            //telemetry.addData("Visible Target", "none");
+            leftPower = 0.0;
+            rightPower = 0.0;
+        }
+
         gamepad1LeftStickX = gamepad1.left_stick_x;
         gamepad1LeftStickY = gamepad1.left_stick_y;
         gamepad1RightStickX = gamepad1.right_stick_x / 2;
         gamepad1RightStickY = gamepad1.right_stick_y;
+
+        if(Math.abs(gamepad1LeftStickX + gamepad1LeftStickY + gamepad1RightStickX + gamepad1RightStickY) > 0.05) {
+            middlePower = 0;
+            leftPower = 0;
+            rightPower = 0;
+        }
 
         if(gamepad1LeftStickX > 0.05 || gamepad1LeftStickX < -.05) {
 
@@ -262,107 +345,6 @@ public class VuforiaSteering extends OpMode {
         middleMotor.setPower(middlePower);
         leftMotor.setPower(leftPower);
         rightMotor.setPower(rightPower);
-
-        camPosition = camMotor.getCurrentPosition();
-        telemetry.addData("Cam Position", camPosition);
-
-        /*if (gamepad2.left_stick_y > 0.01 || gamepad2.left_stick_y < -0.01) {
-
-            camMotor.setPower(gamepad2.left_stick_y/3);
-
-        } else {
-
-            camMotor.setPower(0.0);
-
-        }*/
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        currentAngle = angles.firstAngle;
-
-        //telemetry.addData("Robot Angle", currentAngle);
-
-        targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
-
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
-            }
-        }
-
-        //telemetry.addData("TargetVisible", targetVisible);
-
-        if (targetVisible) {
-
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-            telemetry.addData("Needed Angle", Math.toDegrees(Math.atan(translation.get(0) / translation.get(2))));
-            neededAngle = Math.toDegrees(Math.atan(translation.get(0) / translation.get(2)));
-            error = currentAngle - neededAngle;
-            /*if (error > 2) {
-
-                leftMotor.setPower(error * 1/60);
-                rightMotor.setPower(-error * 1/60);
-
-            }
-
-            else if (error < -2) {
-
-                leftMotor.setPower(error * 1/60);
-                rightMotor.setPower(-error * 1/60);
-
-            }*/
-            neededAngle = Math.toDegrees(Math.atan(35/Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(1),2))));
-            neededPosition = (int)(neededAngle * 21.2 - 8);
-            telemetry.addData("Needed Angle", neededAngle);
-
-            //camMotor.setTargetPosition(neededPosition);
-            telemetry.addData("Cam Motor Target Position", camMotor.getTargetPosition());
-
-            /*else if (error > 0.625) {
-
-                leftMotor.setPower(error * 1/20);
-                rightMotor.setPower(-error * 1/20);
-
-            } else if (error < -0.625) {
-
-                leftMotor.setPower(-error * 1/20);
-                rightMotor.setPower(error * 1/20);
-
-            } else {
-
-                leftMotor.setPower(0.0);
-                rightMotor.setPower(0.0);
-
-            }*/
-            /*if(error < 2 && error > -2) {
-                integral += error;
-            } else {
-                integral = 0;
-            }
-            derivative = lastError - error;
-            lastError = error;
-
-            rightMotor.setPower(-error * KP + integral * KI + derivative * KD);
-            leftMotor.setPower(error * KP + integral * KI + derivative * KD);*/
-            //telemetry.addData("error", error);
-
-        }
-        else {
-            telemetry.addData("Visible Target", "none");
-            leftMotor.setPower(0.0);
-            rightMotor.setPower(0.0);
-        }
-
 
         telemetry.update();
     }
