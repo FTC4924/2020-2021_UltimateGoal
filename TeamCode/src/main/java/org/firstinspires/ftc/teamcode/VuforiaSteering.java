@@ -48,6 +48,7 @@ public class VuforiaSteering extends OpMode {
 
     public double neededAngle;
     public double currentAngle;
+    public double distanceFromPicture;
 
     public double error;
     public double lastError;
@@ -130,7 +131,7 @@ public class VuforiaSteering extends OpMode {
         camMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         camMotor.setTargetPosition(0);
         camMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        camMotor.setPower(.5);
+        camMotor.setPower(0.5);
 
         parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
@@ -244,7 +245,7 @@ public class VuforiaSteering extends OpMode {
 
             VectorF translation = lastLocation.getTranslation();
             telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2)*2.8 / mmPerInch);
 
             Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
             telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
@@ -254,7 +255,7 @@ public class VuforiaSteering extends OpMode {
 
             telemetry.addData("Error Value", error);
 
-            if (gamepad2.b) {
+            if (gamepad1.b) {
 
                 if (Math.abs(error) > 3) {
 
@@ -267,12 +268,13 @@ public class VuforiaSteering extends OpMode {
                     leftPower = 0.0;
                 }
             }
-
-            neededAngle = Math.toDegrees(Math.atan(35/Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2),2))));
+            distanceFromPicture = Math.abs(Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2)));
+            neededAngle = Math.toDegrees(Math.atan(90/Math.abs(Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2)))));     //Cam neededAngle
             neededPosition = (int)(neededAngle * 21.2 - 8);
+            //neededPosition = (int)(neededAngle * 11 + 310);
             telemetry.addData("Needed Cam Angle", neededAngle);
             telemetry.addData("Needed Cam Position", neededPosition);
-            if(gamepad2.a){
+            if(gamepad1.a){
                 camMotor.setTargetPosition(neededPosition);
             }
             telemetry.addData("Cam Motor Target Position", camMotor.getTargetPosition());
