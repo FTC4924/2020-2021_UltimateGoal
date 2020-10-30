@@ -268,10 +268,11 @@ public class VuforiaSteering extends OpMode {
                     leftPower = 0.0;
                 }
             }
-            distanceFromPicture = Math.abs(Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2)));
-            neededAngle = Math.toDegrees(Math.atan(90/Math.abs(Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2)))));     //Cam neededAngle
-            neededPosition = (int)(neededAngle * 21.2 - 8);
-            //neededPosition = (int)(neededAngle * 11 + 310);
+            distanceFromPicture = Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2));
+            //neededAngle = Math.toDegrees(Math.atan(90/Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2))));  Cam neededAngle
+            neededAngle = Math.atan(90/distanceFromPicture);
+            //neededAngle = 30;
+            neededPosition = (int)(neededAngle * 11.2 + 350);
             telemetry.addData("Needed Cam Angle", neededAngle);
             telemetry.addData("Needed Cam Position", neededPosition);
             if(gamepad1.a){
