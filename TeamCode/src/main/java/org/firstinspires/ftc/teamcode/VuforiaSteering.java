@@ -31,14 +31,54 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 @TeleOp(name="VuforiaSteering")
 public class VuforiaSteering extends OpMode {
 
-    int camPosition;
-    int neededPosition;
+    private static final float MM_Per_Inch = 25.4f;
 
-    WebcamName webcamName = null;
+    /*
+    public static final double robotAngleKP = .005;
+    public static final double robotAngleKI = 0;
+    public static final double robotAngleKD = 0;
+     */
 
-    BNO055IMU imu;
-    Orientation angles;
-    BNO055IMU.Parameters parameters;
+    private static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
+
+    private static final float CAMERA_FORWARD_DISPLACEMENT = 0;
+    private static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
+    private static final float CAMERA_LEFT_DISPLACEMENT = 0;
+    private static final float CAMERA_X_ROTATE = 0;
+    private static final float CAMERA_Y_ROTATE = 0;
+    private static final float CAMERA_Z_ROTATE = 0;
+
+    private double gamepad1LeftStickY;
+    private double gamepad1LeftStickX;
+    private double gamepad1RightStickX;
+    private double gamepad1RightStickY;
+
+    private double middlePower;
+    private double leftPower;
+    private double rightPower;
+
+    private boolean targetVisible;
+
+    private double distanceFromImage;
+
+    private double currentRobotAngle;
+    private double neededRobotAngle;
+    private double robotAngleError;
+
+    private double neededVerticalAngle;
+    private int currentCamPosition;
+    private int neededCamPosition;
+
+    private double [][] aimingLookupTable;
+    private int lowerLookupTableIndex;
+    private double verticalAngleSlope;
+    private double verticalAngleYIntercept;
+
+    /*
+    public double lastRobotAngleError;
+    public double robotAngleIntegral;
+    public double robotAngleDerivative;
+     */
 
     private DcMotor rightMotor;
     private DcMotor leftMotor;
@@ -46,53 +86,21 @@ public class VuforiaSteering extends OpMode {
 
     private DcMotor camMotor;
 
-    public double neededAngle;
-    public double currentAngle;
-    public double distanceFromPicture;
+    BNO055IMU imu;
+    Orientation angles;
+    BNO055IMU.Parameters parameters;
 
-    public double error;
-    public double lastError;
-    public double integral;
-    public double derivative;
-
-    public static final double KP = .005;
-    public static final double KI = 0;
-    public static final double KD = 0;
-
-    private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
-    private static final boolean PHONE_IS_LANDSCAPE = true;
-
-    private static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
-
-    private static final float mmPerInch = 25.4f;
-    private static final float mmTargetHeight = (6) * mmPerInch;
-
-    private static final float stoneZ = 2.00f * mmPerInch;
-
-    private static final float bridgeZ = 6.42f * mmPerInch;
-    private static final float bridgeY = 23 * mmPerInch;
-    private static final float bridgeX = 5.18f * mmPerInch;
-    private static final float bridgeRotY = 59;
-    private static final float bridgeRotZ = 180;
-
-    private static final float halfField = 72 * mmPerInch;
-    private static final float quadField  = 36 * mmPerInch;
-
-    OpenGLMatrix robotFromCamera;
-
-    final float CAMERA_FORWARD_DISPLACEMENT  = 0;
-    final float CAMERA_VERTICAL_DISPLACEMENT = 0;
-    final float CAMERA_LEFT_DISPLACEMENT     = 0;
-
+    private OpenGLMatrix robotFromCamera;
+    private OpenGLMatrix robotLocationTransform;
     private OpenGLMatrix lastLocation;
-    private VuforiaLocalizer vuforia;
-    private boolean targetVisible;
-    private float phoneXRotate;
-    private float phoneYRotate;
-    private float phoneZRotate;
+    private VectorF robotPosition;
+    private Orientation robotRotation;
+
+    WebcamName webcam1;
 
     int cameraMonitorViewId;
     VuforiaLocalizer.Parameters vuforiaParameters;
+    private VuforiaLocalizer vuforia;
 
     VuforiaTrackables targetsUltimateGoal;
 
@@ -102,36 +110,58 @@ public class VuforiaSteering extends OpMode {
     VuforiaTrackable blueAllianceTarget;
     VuforiaTrackable frontWallTarget;
 
-    private double middlePower;
-    private double leftPower;
-    private double rightPower;
-
-    private double gamepad1LeftStickY;
-    private double gamepad1LeftStickX;
-    private double gamepad1RightStickX;
-    private double gamepad1RightStickY;
-
-
     List<VuforiaTrackable> allTrackables;
 
     public void init() {
 
-        middlePower = 0;
-        leftPower = 0;
-        rightPower = 0;
+        gamepad1LeftStickY = 0.0;
+        gamepad1LeftStickX = 0.0;
+        gamepad1RightStickX = 0.0;
+        gamepad1RightStickY = 0.0;
 
-        webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        middlePower = 0.0;
+        leftPower = 0.0;
+        rightPower = 0.0;
+
+        targetVisible = false;
+
+        distanceFromImage = 0.0;
+
+        currentRobotAngle = 0.0;
+        neededRobotAngle = 0.0;
+        robotAngleError = 0.0;
+
+        neededVerticalAngle = 0.0;
+        currentCamPosition = 0;
+        neededCamPosition = 0;
+
+        aimingLookupTable = new double[5][2];
+
+        aimingLookupTable[0][0] = 0;
+        aimingLookupTable[0][1] = 2;
+        aimingLookupTable[1][0] = 1;
+        aimingLookupTable[1][1] = 3;
+        aimingLookupTable[2][0] = 2;
+        aimingLookupTable[2][1] = 4;
+        aimingLookupTable[3][0] = 7;
+        aimingLookupTable[3][1] = 9;
+        aimingLookupTable[4][0] = 7;
+        aimingLookupTable[4][1] = 9;
+
+        lowerLookupTableIndex = 0;
+        verticalAngleSlope = 0.0;
+        verticalAngleYIntercept = 0.0;
 
         middleMotor = hardwareMap.get(DcMotor.class, "middleWheelMotor");
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
         leftMotor = hardwareMap.get(DcMotor.class, "leftMotor");
         leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
         camMotor = hardwareMap.get(DcMotor.class, "camMotor");
         camMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         camMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         camMotor.setTargetPosition(0);
         camMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        camMotor.setPower(0.5);
 
         parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
@@ -143,32 +173,23 @@ public class VuforiaSteering extends OpMode {
 
         imu.initialize(parameters);
 
-        lastLocation = null;
-        targetVisible = false;
-        phoneXRotate = 0;
-        phoneYRotate = 0;
-        phoneZRotate = 0;
-
-        /*if (CAMERA_CHOICE == BACK) {
-            phoneYRotate = -90;
-        } else {
-            phoneYRotate = 90;
-        }*/
-
-        if (PHONE_IS_LANDSCAPE) {
-            phoneXRotate = 90 ;
-        }
+        angles = null;
 
         robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
+        robotLocationTransform = null;
+        lastLocation = null;
+        robotPosition = null;
+        robotRotation = null;
+
+        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
 
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         vuforiaParameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
         vuforiaParameters.vuforiaLicenseKey = VUFORIA_KEY;
-        vuforiaParameters.cameraDirection = CAMERA_CHOICE;
-        vuforiaParameters.cameraName = webcamName;
+        vuforiaParameters.cameraName = webcam1;
 
         vuforia = ClassFactory.getInstance().createVuforia(vuforiaParameters);
 
@@ -184,7 +205,6 @@ public class VuforiaSteering extends OpMode {
         blueAllianceTarget.setName("Blue Alliance Target");
         VuforiaTrackable frontWallTarget = targetsUltimateGoal.get(4);
         frontWallTarget.setName("Front Wall Target");
-
 
         blueTowerGoalTarget.setLocation(OpenGLMatrix
                 .translation(0, 0, 0)
@@ -207,95 +227,18 @@ public class VuforiaSteering extends OpMode {
 
     public void loop() {
 
-        middlePower = 0;
-        leftPower = 0;
-        rightPower = 0;
-
-        camPosition = camMotor.getCurrentPosition();
-        telemetry.addData("Cam Position", camPosition);
-
-        /*if (gamepad2.left_stick_y > 0.01 || gamepad2.left_stick_y < -0.01) {
-
-            camMotor.setPower(gamepad2.left_stick_y/3);
-
-        } else {
-
-            camMotor.setPower(0.0);
-
-        }*/
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        currentAngle = angles.firstAngle;
-
-        targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                //telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
-
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
-            }
-        }
-
-        if (targetVisible) {
-
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2)*2.8 / mmPerInch);
-
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-            telemetry.addData("Needed Angle", Math.toDegrees(Math.atan(translation.get(0) / translation.get(2))));
-            neededAngle = Math.toDegrees(Math.atan(translation.get(0) / translation.get(2)));
-            error = currentAngle - neededAngle;
-
-            telemetry.addData("Error Value", error);
-
-            if (gamepad1.b) {
-
-                if (Math.abs(error) > 3) {
-
-                    rightPower = error * 1/70;
-                    leftPower = -error * 1/70;
-
-                } else {
-
-                    rightPower = 0.0;
-                    leftPower = 0.0;
-                }
-            }
-            distanceFromPicture = Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2));
-            //neededAngle = Math.toDegrees(Math.atan(90/Math.sqrt(Math.pow(translation.get(0),2) + Math.pow(translation.get(2)*2.8,2))));  Cam neededAngle
-            neededAngle = Math.atan(90/distanceFromPicture);
-            //neededAngle = 30;
-            neededPosition = (int)(neededAngle * 11.2 + 350);
-            telemetry.addData("Needed Cam Angle", neededAngle);
-            telemetry.addData("Needed Cam Position", neededPosition);
-            if(gamepad1.a){
-                camMotor.setTargetPosition(neededPosition);
-            }
-            telemetry.addData("Cam Motor Target Position", camMotor.getTargetPosition());
-        }
-        else {
-            //telemetry.addData("Visible Target", "none");
-            leftPower = 0.0;
-            rightPower = 0.0;
-        }
-
         gamepad1LeftStickX = gamepad1.left_stick_x;
         gamepad1LeftStickY = gamepad1.left_stick_y;
         gamepad1RightStickX = gamepad1.right_stick_x / 2;
         gamepad1RightStickY = gamepad1.right_stick_y;
 
-        if(Math.abs(gamepad1LeftStickX + gamepad1LeftStickY + gamepad1RightStickX + gamepad1RightStickY) > 0.05) {
-            middlePower = 0;
-            leftPower = 0;
-            rightPower = 0;
-        }
+        middlePower = 0;
+        leftPower = 0;
+        rightPower = 0;
+
+        targetVisible = false;
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, DEGREES);;
 
         if(gamepad1LeftStickX > 0.05 || gamepad1LeftStickX < -.05) {
 
@@ -343,6 +286,84 @@ public class VuforiaSteering extends OpMode {
                 rightPower += gamepad1RightStickX;
 
             }
+        }
+
+        if (gamepad2.left_stick_y > 0.01 || gamepad2.left_stick_y < -0.01) {
+
+            camMotor.setPower(gamepad2.left_stick_y/3);
+
+        } else {
+
+            camMotor.setPower(0.0);
+
+        }
+
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+                //telemetry.addData("Visible Target", trackable.getName());
+                targetVisible = true;
+
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                if (robotLocationTransform != null) {
+
+                    lastLocation = robotLocationTransform;
+
+                }
+
+                break;
+
+            }
+        }
+
+        if (targetVisible && gamepad1.b) {
+
+            robotPosition = lastLocation.getTranslation();
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    robotPosition.get(0) / MM_Per_Inch, robotPosition.get(1) / MM_Per_Inch, robotPosition.get(2) / MM_Per_Inch);
+
+            robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
+
+            currentRobotAngle = angles.firstAngle;
+            neededRobotAngle = Math.toDegrees(Math.atan(robotPosition.get(0) / robotPosition.get(2)));
+            telemetry.addData("Needed Robot Angle", neededRobotAngle);
+            robotAngleError = currentRobotAngle - neededRobotAngle;
+            telemetry.addData("Robot Angle Error", robotAngleError);
+
+
+            if (Math.abs(robotAngleError) > 3) {
+
+                rightPower = robotAngleError * 1/70;
+                leftPower = -robotAngleError * 1/70;
+
+            } else {
+
+                rightPower = 0.0;
+                leftPower = 0.0;
+
+            }
+
+            distanceFromImage = Math.sqrt(Math.pow(robotPosition.get(0),2) + Math.pow(robotPosition.get(2),2));
+
+            for (int i = 0; i < aimingLookupTable.length; i++) {
+                if (distanceFromImage >= aimingLookupTable[i][0] && distanceFromImage <= aimingLookupTable[i + 1][0]) {
+
+                    lowerLookupTableIndex = i;
+
+                    break;
+
+                }
+            }
+
+            verticalAngleSlope = (aimingLookupTable[lowerLookupTableIndex + 1][1] - aimingLookupTable[lowerLookupTableIndex][1] / (aimingLookupTable[lowerLookupTableIndex + 1][0] - aimingLookupTable[lowerLookupTableIndex][0]));
+            verticalAngleYIntercept = aimingLookupTable[lowerLookupTableIndex][1] - verticalAngleSlope * aimingLookupTable[lowerLookupTableIndex][0];
+            neededVerticalAngle = (int) Math.round(verticalAngleSlope*distanceFromImage+verticalAngleYIntercept);
+            telemetry.addData("Needed Vertical Angle", neededVerticalAngle);
+
+            telemetry.addData("Needed Cam Position", neededCamPosition);
+            camMotor.setTargetPosition(neededCamPosition);
+
+            //telemetry.addData("Current Cam Motor Target Position", camMotor.getTargetPosition());
         }
 
         middleMotor.setPower(middlePower);

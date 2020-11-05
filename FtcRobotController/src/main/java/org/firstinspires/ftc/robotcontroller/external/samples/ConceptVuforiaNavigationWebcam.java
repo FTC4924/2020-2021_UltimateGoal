@@ -121,7 +121,7 @@ public class ConceptVuforiaNavigationWebcam extends LinearOpMode {
     @Override public void runOpMode() {
 
         /*
-         * Retrieve the camera we are to use.
+         * Retrieve the camFera we are to use.
          */
         webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
 

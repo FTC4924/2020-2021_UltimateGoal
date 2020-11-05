@@ -31,7 +31,6 @@ public abstract class AutoBase extends OpMode {
             case MOVE:
 
                 break;
-
         }
 
     }
