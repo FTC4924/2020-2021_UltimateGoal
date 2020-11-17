@@ -61,7 +61,16 @@ public class XDrive extends OpMode {
             rightBackPower += gamepad1LeftStickX / 2;
         }
         if (gamepad1LeftStickY >= 0.05 || gamepad1LeftStickY <= -0.05) {
-            
+            leftFrontPower += gamepad1LeftStickY / 2;
+            leftBackPower += gamepad1LeftStickY / 2;
+            rightFrontPower += gamepad1LeftStickY / -2;
+            rightBackPower += gamepad1LeftStickY / -2;
+        }
+        if (gamepad1RightStickX >= 0.05 || gamepad1RightStickX <=-0.05) {
+            leftFrontPower += gamepad1RightStickX / 2;
+            leftBackPower += gamepad1RightStickX / 2;
+            rightFrontPower += gamepad1RightStickX / 2;
+            rightBackPower += gamepad1RightStickX / 2;
         }
 
         leftFront.setPower(leftFrontPower);

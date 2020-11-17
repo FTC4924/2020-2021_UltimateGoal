@@ -346,7 +346,7 @@ public class VuforiaSteering extends OpMode {
 
                 /*distanceFromImage = Math.sqrt(Math.pow(robotPosition.get(0),2) + Math.pow(robotPosition.get(2),2));
 
-                for (int i = 0; i < aimingLookupTable.length; i++) {
+                for (int i = 0; i < aimingLookupTable.length - 1; i++) {
                     if (distanceFromImage >= aimingLookupTable[i][0] && distanceFromImage <= aimingLookupTable[i + 1][0]) {
 
                         lowerLookupTableIndex = i;
