@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name="XDrive")
-public class XDrive extends OpMode {
+public class AdvancedXDrive extends OpMode {
 
     private double gamepad1LeftStickY;
     private double gamepad1LeftStickX;
@@ -49,30 +49,18 @@ public class XDrive extends OpMode {
         gamepad1RightStickX = gamepad1.right_stick_x;
         gamepad1RightStickY = gamepad1.right_stick_y;
 
-        /* if the joystick is far enough from the center the robot will move in the direction the
-        joystick based on the robot's perspective. */
-        if (Math.abs(gamepad1LeftStickX) > 0.05 || Math.abs(gamepad1LeftStickY) > 0.05) {
-
-            leftFrontPower = gamepad1LeftStickX + gamepad1LeftStickY;
-            rightFrontPower = gamepad1LeftStickX - gamepad1LeftStickY;
-            leftBackPower = -gamepad1LeftStickX + gamepad1LeftStickY;
-            rightBackPower = -gamepad1LeftStickX - gamepad1LeftStickY;
-
+        if (gamepad1LeftStickX >= 0.05 || gamepad1LeftStickX <= -0.05) {
+            leftFrontPower += gamepad1LeftStickX / 2;
+            leftBackPower += gamepad1LeftStickX / -2;
+            rightFrontPower += gamepad1LeftStickX / -2;
+            rightBackPower += gamepad1LeftStickX / 2;
         } else {
-
             leftFrontPower = 0.0;
             leftBackPower = 0.0;
             rightFrontPower = 0.0;
             rightBackPower = 0.0;
-
         }
-
-        if (Math.abs(gamepad1RightStickX) > 0.05) {
-
-            leftFrontPower += gamepad1RightStickX/5;
-            leftBackPower += gamepad1RightStickX/5;
-            rightBackPower += gamepad1RightStickX/5;
-            rightFrontPower += gamepad1RightStickX/5
+        if (gamepad1LeftStickY >= 0.05 || gamepad1LeftStickY <= -0.05) {
 
         }
 
@@ -81,5 +69,5 @@ public class XDrive extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-
+    }
 }
