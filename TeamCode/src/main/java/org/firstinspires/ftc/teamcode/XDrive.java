@@ -53,10 +53,10 @@ public class XDrive extends OpMode {
         joystick based on the robot's perspective. */
         if (Math.abs(gamepad1LeftStickX) > 0.05 || Math.abs(gamepad1LeftStickY) > 0.05) {
 
-            leftFrontPower = gamepad1LeftStickX + gamepad1LeftStickY;
-            rightFrontPower = gamepad1LeftStickX - gamepad1LeftStickY;
-            leftBackPower = -gamepad1LeftStickX + gamepad1LeftStickY;
-            rightBackPower = -gamepad1LeftStickX - gamepad1LeftStickY;
+            leftFrontPower = -gamepad1LeftStickX + gamepad1LeftStickY;
+            rightFrontPower = -gamepad1LeftStickX - gamepad1LeftStickY;
+            leftBackPower = gamepad1LeftStickX + gamepad1LeftStickY;
+            rightBackPower = gamepad1LeftStickX - gamepad1LeftStickY;
 
         } else {
 
@@ -69,10 +69,10 @@ public class XDrive extends OpMode {
 
         if (Math.abs(gamepad1RightStickX) > 0.05) {
 
-            leftFrontPower += gamepad1RightStickX/5;
-            leftBackPower += gamepad1RightStickX/5;
-            rightBackPower += gamepad1RightStickX/5;
-            rightFrontPower += gamepad1RightStickX/5
+            leftFrontPower -= gamepad1RightStickX / 2.5;
+            leftBackPower -= gamepad1RightStickX / 2.5;
+            rightBackPower -= gamepad1RightStickX / 2.5;
+            rightFrontPower -= gamepad1RightStickX / 2.5;
 
         }
 
@@ -81,5 +81,5 @@ public class XDrive extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-
+    }
 }
