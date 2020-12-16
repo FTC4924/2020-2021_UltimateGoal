@@ -5,6 +5,9 @@ import android.service.autofill.DateValueSanitizer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.Constants.*;
 
 @TeleOp(name="XDrive")
 public class XDrive extends OpMode {
@@ -19,10 +22,22 @@ public class XDrive extends OpMode {
     private double rightFrontPower;
     private double rightBackPower;
 
+    private boolean bristlesIn;
+    private boolean bristlesOut;
+    private boolean bPressed;
+    private boolean xPressed;
+
     public DcMotor leftFront;
     public DcMotor leftBack;
     public DcMotor rightFront;
     public DcMotor rightBack;
+
+    public DcMotor collection;
+    public Servo elevator;
+    public DcMotor shooter;
+
+    public Servo funnelLeft;
+    public Servo funnelRight;
 
     public void init() {
 
@@ -41,9 +56,15 @@ public class XDrive extends OpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
+        collection = hardwareMap.get(DcMotor.class, "collection");
+        shooter = hardwareMap.get(DcMotor.class, "shooter");
+        elevator = hardwareMap.get(Servo.class, "elevator");
+
+        funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
+        funnelRight = hardwareMap.get(Servo.class, "funnelRight");
+
     }
     public void loop() {
-
         gamepad1LeftStickX = gamepad1.left_stick_x;
         gamepad1LeftStickY = gamepad1.left_stick_y;
         gamepad1RightStickX = gamepad1.right_stick_x;
@@ -76,10 +97,44 @@ public class XDrive extends OpMode {
 
         }
 
+        if (gamepad2.b) {
+            if (!bPressed) {
+                bPressed = true;
+                if (bristlesIn) {
+                    bristlesIn = false;
+                } else {
+                    bristlesIn = true;
+                    bristlesOut = false;
+                }
+            }
+        } else {
+            bPressed = false;
+        }
+        if (gamepad2.x) {
+            if (!xPressed) {
+                xPressed = true;
+                if (bristlesOut) {
+                    bristlesOut = false;
+                } else {
+                    bristlesOut = true;
+                    bristlesIn = false;
+                }
+            } 
+        } else {
+            xPressed = false;
+        }
+
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
+        if (bristlesIn) {
+            collection.setPower(-0.75);
+        } else if (bristlesOut) {
+            collection.setPower(0.75);
+        } else if (!bristlesIn && !bristlesOut) {
+            collection.setPower(0);
+        }
     }
 }
