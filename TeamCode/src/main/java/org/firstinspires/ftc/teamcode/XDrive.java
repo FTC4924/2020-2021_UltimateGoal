@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.service.autofill.DateValueSanitizer;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,6 +24,8 @@ public class XDrive extends OpMode {
     private boolean bristlesOut;
     private boolean bPressed;
     private boolean xPressed;
+    private boolean yPressed;
+    private boolean shooterRev;
 
     public DcMotor leftFront;
     public DcMotor leftBack;
@@ -122,6 +122,18 @@ public class XDrive extends OpMode {
             } 
         } else {
             xPressed = false;
+        }
+        if (gamepad2.y) {
+            if (!yPressed) {
+                yPressed = true;
+                if (shooterRev) {
+                    shooterRev = false;
+                } else {
+                    shooterRev = true;
+                }
+            }
+        } else {
+            yPressed = false;
         }
 
         leftFront.setPower(leftFrontPower);
