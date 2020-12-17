@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Constants.*;
+import static org.firstinspires.ftc.teamcode.Constants.*;
 
 @TeleOp(name="XDrive")
 public class XDrive extends OpMode {
@@ -24,8 +24,11 @@ public class XDrive extends OpMode {
     private boolean bristlesOut;
     private boolean bPressed;
     private boolean xPressed;
+
     private boolean yPressed;
     private boolean shooterRev;
+
+    private int elevatorPosition;
 
     public DcMotor leftFront;
     public DcMotor leftBack;
@@ -50,6 +53,8 @@ public class XDrive extends OpMode {
         leftBackPower = 0.0;
         rightFrontPower = 0.0;
         rightBackPower = 0.0;
+
+        elevatorPosition = 0;
 
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
