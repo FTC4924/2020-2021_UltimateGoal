@@ -141,7 +141,9 @@ public class XDrive extends OpMode {
         if (gamepad2.left_bumper) {
             if(!leftBumperPressed) {
                 leftBumperPressed = true;
-                elevatorPositionIndex = (elevatorPositionIndex - 1) % 5;
+                if(elevatorPositionIndex > 0) {
+                    elevatorPositionIndex = (elevatorPositionIndex - 1) % 5;
+                }
             }
         } else {
             leftBumperPressed = false;
