@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import static org.firstinspires.ftc.teamcode.Constants.JOYSTICK_TOLERANCE;
+import static org.firstinspires.ftc.teamcode.Constants.TURNING_REDUCTION;
+
 @TeleOp(name="AdvancedXDrive")
 public class AdvancedXDrive extends OpMode {
 
@@ -56,5 +59,19 @@ public class AdvancedXDrive extends OpMode {
         leftBackPower = Math.sin(gamepad1LeftStickAngle-(Math.PI/4));
         rightFrontPower = Math.sin(gamepad1LeftStickAngle-(Math.PI/4))*-1;
         rightBackPower = Math.cos(gamepad1LeftStickAngle-(Math.PI/4))*-1;
+
+        leftFrontPower *= (gamepad1RightStickY + 1) / 2;
+        leftBackPower *= (gamepad1RightStickY + 1) / 2;
+        rightBackPower *= (gamepad1RightStickY + 1) / 2;
+        rightFrontPower *= (gamepad1RightStickY + 1) / 2;
+
+        if (Math.abs(gamepad1RightStickX) > JOYSTICK_TOLERANCE) {
+            leftFrontPower -= gamepad1RightStickX / TURNING_REDUCTION;
+            leftBackPower -= gamepad1RightStickX / TURNING_REDUCTION;
+            rightBackPower -= gamepad1RightStickX / TURNING_REDUCTION;
+            rightFrontPower -= gamepad1RightStickX / TURNING_REDUCTION;
+        }
+
+
     }
 }
