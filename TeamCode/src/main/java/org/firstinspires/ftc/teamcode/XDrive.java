@@ -5,6 +5,23 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.teamcode.Constants.*;
 
 @TeleOp(name="XDrive")
@@ -43,6 +60,54 @@ public class XDrive extends OpMode {
     public Servo funnelLeft;
     public Servo funnelRight;
 
+    private boolean targetVisible;
+
+    private double distanceFromImage;
+
+    private double currentRobotAngle;
+    private double neededRobotAngle;
+    private double robotAngleError;
+
+    private double neededVerticalAngle;
+    private int currentCamPosition;
+    private int neededCamPosition;
+
+    private double [][] aimingLookupTable;
+    private int lowerLookupTableIndex;
+    private double verticalAngleSlope;
+    private double verticalAngleYIntercept;
+
+    private static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
+
+    private static final float CAMERA_FORWARD_DISPLACEMENT = 0;
+    private static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
+    private static final float CAMERA_LEFT_DISPLACEMENT = 0;
+    private static final float CAMERA_X_ROTATE = 0;
+    private static final float CAMERA_Y_ROTATE = 0;
+    private static final float CAMERA_Z_ROTATE = 0;
+
+    private OpenGLMatrix robotFromCamera;
+    private OpenGLMatrix robotLocationTransform;
+    private OpenGLMatrix lastLocation;
+    private VectorF robotPosition;
+    private Orientation robotRotation;
+
+    WebcamName webcam1;
+
+    int cameraMonitorViewId;
+    VuforiaLocalizer.Parameters vuforiaParameters;
+    private VuforiaLocalizer vuforia;
+
+    VuforiaTrackables targetsUltimateGoal;
+
+    VuforiaTrackable blueTowerGoalTarget;
+    VuforiaTrackable redTowerGoalTarget;
+    VuforiaTrackable redAllianceTarget;
+    VuforiaTrackable blueAllianceTarget;
+    VuforiaTrackable frontWallTarget;
+
+    List<VuforiaTrackable> allTrackables;
+
     public void init() {
 
         gamepad1LeftStickY = 0.0;
@@ -76,6 +141,83 @@ public class XDrive extends OpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
+
+        targetVisible = false;
+
+        distanceFromImage = 0.0;
+
+        currentRobotAngle = 0.0;
+        neededRobotAngle = 0.0;
+        robotAngleError = 0.0;
+
+        neededVerticalAngle = 0.0;
+        currentCamPosition = 0;
+        neededCamPosition = 0;
+
+        aimingLookupTable = new double[5][2];
+
+        aimingLookupTable[0][0] = 0;
+        aimingLookupTable[0][1] = 2;
+        aimingLookupTable[1][0] = 1;
+        aimingLookupTable[1][1] = 3;
+        aimingLookupTable[2][0] = 2;
+        aimingLookupTable[2][1] = 4;
+        aimingLookupTable[3][0] = 7;
+        aimingLookupTable[3][1] = 9;
+        aimingLookupTable[4][0] = 7;
+        aimingLookupTable[4][1] = 9;
+
+        lowerLookupTableIndex = 0;
+        verticalAngleSlope = 0.0;
+        verticalAngleYIntercept = 0.0;
+
+        robotFromCamera = OpenGLMatrix
+                .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
+        robotLocationTransform = null;
+        lastLocation = null;
+        robotPosition = null;
+        robotRotation = null;
+
+        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        vuforiaParameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+
+        vuforiaParameters.vuforiaLicenseKey = VUFORIA_KEY;
+        vuforiaParameters.cameraName = webcam1;
+
+        vuforia = ClassFactory.getInstance().createVuforia(vuforiaParameters);
+
+        targetsUltimateGoal = this.vuforia.loadTrackablesFromAsset("UltimateGoal");
+
+        VuforiaTrackable blueTowerGoalTarget = targetsUltimateGoal.get(0);
+        blueTowerGoalTarget.setName("Blue Tower Goal Target");
+        VuforiaTrackable redTowerGoalTarget = targetsUltimateGoal.get(1);
+        redTowerGoalTarget.setName("Red Tower Goal Target");
+        VuforiaTrackable redAllianceTarget = targetsUltimateGoal.get(2);
+        redAllianceTarget.setName("Red Alliance Target");
+        VuforiaTrackable blueAllianceTarget = targetsUltimateGoal.get(3);
+        blueAllianceTarget.setName("Blue Alliance Target");
+        VuforiaTrackable frontWallTarget = targetsUltimateGoal.get(4);
+        frontWallTarget.setName("Front Wall Target");
+
+        blueTowerGoalTarget.setLocation(OpenGLMatrix
+                .translation(0, 0, 0)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, 0 , 0)));
+
+        redTowerGoalTarget.setLocation(OpenGLMatrix
+                .translation(0, 0, 0)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, 0, 0)));
+
+        allTrackables = new ArrayList<VuforiaTrackable>();
+        allTrackables.addAll(targetsUltimateGoal);
+
+        for (VuforiaTrackable trackable : allTrackables) {
+            ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters.cameraDirection);
+        }
+
+        targetsUltimateGoal.activate();
 
     }
 
