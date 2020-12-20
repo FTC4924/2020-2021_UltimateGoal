@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 public class Constants {
 
     protected static final double JOYSTICK_TOLERANCE = 0.05;
-    protected static final double TURNING_REDUCTION = 2.5;
+    protected static final double TURNING_REDUCTION = 1;
 
     protected enum ElevatorPositions {
 
