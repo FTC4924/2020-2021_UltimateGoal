@@ -20,10 +20,13 @@ public class AdvancedXDrive extends OpMode {
     //Reused analog values from the controller
     private double gamepad1LeftStickX;
     private double gamepad1LeftStickY;
-    private double gamepad1RightStickX;
     private double gamepad1RightStickY;
     private double gamepad1LeftTrigger;
     private double gamepad1RightTrigger;
+
+    private double gamepad2LeftStickY;
+
+    private double shooterTargetPosition;
 
     //Reused Calculated Values
     private double gamepad1LeftStickAngle;
@@ -59,6 +62,8 @@ public class AdvancedXDrive extends OpMode {
     public DcMotor shooter;
     public Servo funnelLeft;
     public Servo funnelRight;
+    public Servo shooterLeft;
+    public Servo shooterRight;
 
     //Gyro sensor
     BNO055IMU imu;
@@ -72,12 +77,15 @@ public class AdvancedXDrive extends OpMode {
         //Initializing all of the variables to their default values
         gamepad1LeftStickX = 0.0;
         gamepad1LeftStickY = 0.0;
-        gamepad1RightStickX = 0.0;
         gamepad1RightStickY = 0.0;
         gamepad1RightTrigger = 0.0;
         gamepad1LeftTrigger = 0.0;
 
+        gamepad2LeftStickY = 0.0;
+
         gamepad1LeftStickAngle = 0.0;
+
+        shooterTargetPosition = SHOOTER_DEFAULT_POSITION;
 
         leftFrontPower = 0.0;
         leftBackPower = 0.0;
@@ -106,8 +114,13 @@ public class AdvancedXDrive extends OpMode {
         bristles = hardwareMap.get(DcMotor.class, "collection");
         elevator = hardwareMap.get(Servo.class, "elevator");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
+        /*
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
+        shooterLeft = hardwareMap.get(Servo.class, "shooterLeft");
+        shooterRight = hardwareMap.get(Servo.class, "shooterRight");
+
+         */
 
         //Setting the shooter motor to brake rather than drift when the power is set to 0
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -137,7 +150,7 @@ public class AdvancedXDrive extends OpMode {
         //Setting the reused analog values on the controller to more easily accessible variables
         gamepad1LeftStickX = gamepad1.left_stick_x;
         gamepad1LeftStickY = gamepad1.left_stick_y;
-        gamepad1RightStickX = gamepad1.right_stick_x;
+        gamepad2LeftStickY = gamepad2.left_stick_y;
         gamepad1RightStickY = gamepad1.right_stick_y;
         gamepad1LeftTrigger = gamepad1.left_trigger;
         gamepad1RightTrigger = gamepad1.right_trigger;
@@ -249,8 +262,14 @@ public class AdvancedXDrive extends OpMode {
         }
 
         //Manual aim for the shooter
-        if (Math.abs()) {
-
+        if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
+            shooterTargetPosition += gamepad2LeftStickY / SHOOTER_MANUAL_REDUCTION;
+            if (shooterTargetPosition > 1.0) {
+                shooterTargetPosition = 1.0;
+            }
+            if (shooterTargetPosition < 0.0) {
+                shooterTargetPosition = 0.0;
+            }
         }
 
         //Setting the power of the wheels based on the calculations above
@@ -295,6 +314,7 @@ public class AdvancedXDrive extends OpMode {
             shooter.setPower(0.0);
         }
 
+        /*
         //Setting the funnels to the down position
         if (funnelDown) {
             funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
@@ -303,5 +323,10 @@ public class AdvancedXDrive extends OpMode {
             funnelLeft.setPosition(FUNNEL_LEFT_UP);
             funnelRight.setPosition(FUNNEL_RIGHT_UP);
         }
+
+        //Setting the aiming servos to shooterTargetPosition
+        shooterLeft.setPosition(shooterTargetPosition);
+        shooterRight.setPosition(shooterTargetPosition);
+         */
     }
 }

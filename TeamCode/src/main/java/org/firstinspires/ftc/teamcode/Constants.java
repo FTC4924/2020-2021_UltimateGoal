@@ -10,6 +10,8 @@ public class Constants {
     protected static final double FUNNEL_RIGHT_DOWN = 0.0;
     protected static final double FUNNEL_LEFT_UP = 0.0;
     protected static final double FUNNEL_RIGHT_UP = 0.0;
+    protected static final double SHOOTER_DEFAULT_POSITION = 0.0;
+    protected static final double SHOOTER_MANUAL_REDUCTION = 10;
 
     protected enum ElevatorPositions {
 
