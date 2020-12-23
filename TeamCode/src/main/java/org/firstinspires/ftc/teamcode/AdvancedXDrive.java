@@ -238,6 +238,21 @@ public class AdvancedXDrive extends OpMode {
             yPressed = false;
         }
 
+        //Toggle for the collection funnel, when you press the a button the funnels go either down or up
+        if (gamepad2.a) {
+            if (!aPressed) {
+                aPressed = true;
+                funnelDown = !funnelDown;
+            }
+        } else {
+            aPressed = false;
+        }
+
+        //Manual aim for the shooter
+        if (Math.abs()) {
+
+        }
+
         //Setting the power of the wheels based on the calculations above
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
@@ -278,6 +293,15 @@ public class AdvancedXDrive extends OpMode {
             shooter.setPower(SHOOTER_POWER * -1);
         } else {
             shooter.setPower(0.0);
+        }
+
+        //Setting the funnels to the down position
+        if (funnelDown) {
+            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
+            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+        } else {
+            funnelLeft.setPosition(FUNNEL_LEFT_UP);
+            funnelRight.setPosition(FUNNEL_RIGHT_UP);
         }
     }
 }
