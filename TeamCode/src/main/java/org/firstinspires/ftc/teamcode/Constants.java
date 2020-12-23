@@ -7,15 +7,15 @@ public class Constants {
 
     protected enum ElevatorPositions {
 
-        DOWN(0),
-        MIDDLE(0),
-        RING_ONE(0),
-        RING_TWO(0),
-        RING_THREE(0);
+        DOWN(0.7),
+        MIDDLE(0.45),
+        RING_ONE(0.365),
+        RING_TWO(0.345),
+        RING_THREE(0.325);
 
-        public final int positionValue;
+        public final double positionValue;
 
-        private ElevatorPositions(int positionValue) {
+        private ElevatorPositions(double positionValue) {
 
             this.positionValue = positionValue;
 
