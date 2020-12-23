@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 public class Constants {
 
-    protected static final double JOYSTICK_TOLERANCE = 0.05;
-    protected static final double TURNING_REDUCTION = 1;
+    protected static final double TOLERANCE = 0.05;
+    protected static final double TURNING_REDUCTION = 1.0;
+    protected static final double BRISTLES_POWER = 1.0;
+    protected static final double SHOOTER_POWER = 1.0;
 
     protected enum ElevatorPositions {
 
