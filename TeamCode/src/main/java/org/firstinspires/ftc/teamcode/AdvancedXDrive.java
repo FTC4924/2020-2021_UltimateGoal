@@ -23,13 +23,12 @@ public class AdvancedXDrive extends OpMode {
     private double gamepad1RightStickY;
     private double gamepad1LeftTrigger;
     private double gamepad1RightTrigger;
-
     private double gamepad2LeftStickY;
-
-    private double shooterTargetPosition;
 
     //Reused Calculated Values
     private double gamepad1LeftStickAngle;
+
+    private double shooterTargetPosition;
 
     //Logic
     private double leftFrontPower;
@@ -80,7 +79,6 @@ public class AdvancedXDrive extends OpMode {
         gamepad1RightStickY = 0.0;
         gamepad1RightTrigger = 0.0;
         gamepad1LeftTrigger = 0.0;
-
         gamepad2LeftStickY = 0.0;
 
         gamepad1LeftStickAngle = 0.0;
@@ -119,7 +117,6 @@ public class AdvancedXDrive extends OpMode {
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
         shooterLeft = hardwareMap.get(Servo.class, "shooterLeft");
         shooterRight = hardwareMap.get(Servo.class, "shooterRight");
-
          */
 
         //Setting the shooter motor to brake rather than drift when the power is set to 0
@@ -193,6 +190,12 @@ public class AdvancedXDrive extends OpMode {
             rightFrontPower -= Math.pow(gamepad1RightTrigger, 2);
             rightBackPower -= Math.pow(gamepad1RightTrigger, 2);
         }
+
+        /*
+        //Setting the aiming servos to shooterTargetPosition
+        shooterLeft.setPosition(shooterTargetPosition);
+        shooterRight.setPosition(shooterTargetPosition);
+         */
 
         /*Double toggle for the bristles, when you press the b button the bristles spin out,
         when you press the x button they spin in, and when you press the most recent one again it stops*/
@@ -323,10 +326,6 @@ public class AdvancedXDrive extends OpMode {
             funnelLeft.setPosition(FUNNEL_LEFT_UP);
             funnelRight.setPosition(FUNNEL_RIGHT_UP);
         }
-
-        //Setting the aiming servos to shooterTargetPosition
-        shooterLeft.setPosition(shooterTargetPosition);
-        shooterRight.setPosition(shooterTargetPosition);
-         */
+        */
     }
 }
