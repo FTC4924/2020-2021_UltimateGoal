@@ -141,7 +141,7 @@ public class AdvancedXDrive extends OpMode {
 
         telemetry.addData("Elevator Index", elevatorPositionIndex);
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, DEGREES);;
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, DEGREES);
         currentRobotAngle = angles.firstAngle;
 
         //Setting the reused analog values on the controller to more easily accessible variables
