@@ -45,6 +45,7 @@ public class AdvancedXDrive extends OpMode {
 
     public DcMotor bristles;
     public Servo elevator;
+    public Servo kicker;
     public DcMotor shooter;
     public Servo funnelLeft;
     public Servo funnelRight;
@@ -89,8 +90,9 @@ public class AdvancedXDrive extends OpMode {
 
         bristles = hardwareMap.get(DcMotor.class, "collection");
         elevator = hardwareMap.get(Servo.class, "elevator");
+        kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);    //Changed to FLOAT on 12/24/2020 because I don't want to break our motor (E)
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
         //initializing the gyro sensor
@@ -239,9 +241,18 @@ public class AdvancedXDrive extends OpMode {
         }
         //Turning the shooter on and off
         if (shooterRev) {
-            shooter.setPower(-1.0);
+            shooter.setPower(-1.0); //full on in "reverse" direction
         } else {
             shooter.setPower(0.0);
+        }
+
+        //The new kicker servo to launch disks, added 12/24/2020
+        if(gamepad2.right_trigger>0) {
+            kicker.setPosition(1-(gamepad2.right_trigger*0.3)); //gives some control over how far forward the kicker is
+            //integer at the end corresponds to how many degrees we turn (1 = 180, 0.5 = 90, 0.25 = 45)
+        }
+        else {
+            kicker.setPosition(1); //kicker out of the way/full back in poistion 1
         }
     }
 }
