@@ -231,7 +231,7 @@ public class XDrive extends OpMode {
 
         /* if the joystick is far enough from the center the robot will move in the direction of the
         joystick based on the robot's perspective. */
-        if (Math.abs(gamepad1LeftStickX) > JOYSTICK_TOLERANCE || Math.abs(gamepad1LeftStickY) > JOYSTICK_TOLERANCE) {
+        if (Math.abs(gamepad1LeftStickX) > TOLERANCE || Math.abs(gamepad1LeftStickY) > TOLERANCE) {
             leftFrontPower = -gamepad1LeftStickX + gamepad1LeftStickY;
             rightFrontPower = -gamepad1LeftStickX - gamepad1LeftStickY;
             leftBackPower = gamepad1LeftStickX + gamepad1LeftStickY;
@@ -243,7 +243,7 @@ public class XDrive extends OpMode {
             rightBackPower = 0.0;
         }
 
-        if (Math.abs(gamepad1RightStickX) > JOYSTICK_TOLERANCE) {
+        if (Math.abs(gamepad1RightStickX) > TOLERANCE) {
             leftFrontPower -= gamepad1RightStickX / TURNING_REDUCTION;
             leftBackPower -= gamepad1RightStickX / TURNING_REDUCTION;
             rightBackPower -= gamepad1RightStickX / TURNING_REDUCTION;

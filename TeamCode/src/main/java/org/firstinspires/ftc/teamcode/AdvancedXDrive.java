@@ -15,58 +15,80 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 
 @TeleOp(name="AdvancedXDrive")
 public class AdvancedXDrive extends OpMode {
-    //Creating variables so the robot works
+
+    //Declaring all variables and objects in the program
+    //Reused analog values from the controller
     private double gamepad1LeftStickX;
     private double gamepad1LeftStickY;
-    private double gamepad1RightStickX;
     private double gamepad1RightStickY;
+    private double gamepad1LeftTrigger;
+    private double gamepad1RightTrigger;
+    private double gamepad2LeftStickY;
 
+    //Reused Calculated Values
     private double gamepad1LeftStickAngle;
 
+    private double shooterTargetPosition;
+
+    //Logic
     private double leftFrontPower;
     private double leftBackPower;
     private double rightFrontPower;
     private double rightBackPower;
-
-    private double currentRobotAngle;
 
     private boolean bPressed;
     private boolean xPressed;
     private boolean bristlesIn;
     private boolean bristlesOut;
 
+    private boolean rightBumperPressed;
+    private boolean leftBumperPressed;
+    private int elevatorPositionIndex;
+
     private boolean yPressed;
     private boolean shooterRev;
 
+    private double kickerPosition;
+
+    private boolean aPressed;
+    private boolean funnelDown;
+
+    //Motors and servos
     public DcMotor leftFront;
     public DcMotor leftBack;
     public DcMotor rightFront;
     public DcMotor rightBack;
-
     public DcMotor bristles;
     public Servo elevator;
     public Servo kicker;
     public DcMotor shooter;
     public Servo funnelLeft;
     public Servo funnelRight;
+    public Servo shooterLeft;
+    public Servo shooterRight;
 
-    private boolean rightBumperPressed;
-    private boolean leftBumperPressed;
-    private int elevatorPositionIndex;
 
     //creating the variables for the gyro sensor
     BNO055IMU imu;
-    Orientation angles;
     BNO055IMU.Parameters parameters;
 
+    Orientation angles;
+    private double currentRobotAngle;
+    private double angleOffset;
+
     public void init() {
-        //Setting initial values for the variables so the robot has a place to start
+
+        //Initializing all of the variables to their default values
         gamepad1LeftStickX = 0.0;
         gamepad1LeftStickY = 0.0;
-        gamepad1RightStickX = 0.0;
         gamepad1RightStickY = 0.0;
+        gamepad1RightTrigger = 0.0;
+        gamepad1LeftTrigger = 0.0;
+        gamepad2LeftStickY = 0.0;
 
         gamepad1LeftStickAngle = 0.0;
+
+        shooterTargetPosition = SHOOTER_DEFAULT_POSITION;
 
         leftFrontPower = 0.0;
         leftBackPower = 0.0;
@@ -74,28 +96,43 @@ public class AdvancedXDrive extends OpMode {
         rightBackPower = 0.0;
 
         currentRobotAngle = 0.0;
+        angleOffset = 0.0;
 
         bPressed = false;
         xPressed = false;
         bristlesIn = false;
         bristlesOut = false;
 
+        rightBumperPressed = false;
+        leftBumperPressed = false;
+        elevatorPositionIndex = 0;
+
         yPressed = false;
         shooterRev = false;
-        //Mapping the variables to their appropriate motor/servo so the robot understands the code
+
+        kickerPosition = 0.0;
+
+        //Instantiating the motor and servo objects as their appropriate motor/servo in the configuration on the robot
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftBack = hardwareMap.get(DcMotor.class, "leftBack");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-
         bristles = hardwareMap.get(DcMotor.class, "collection");
         elevator = hardwareMap.get(Servo.class, "elevator");
         kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);    //Changed to FLOAT on 12/24/2020 because I don't want to break our motor (E)
+        shooterLeft = hardwareMap.get(Servo.class, "shooterLeft");
+        shooterRight = hardwareMap.get(Servo.class, "shooterRight");
+        /*
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
-        //initializing the gyro sensor
+         */
+
+
+        //Setting the shooter motor to brake rather than drift when the power is set to 0
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);  //Changed to FLOAT on 12/24/2020 because I don't want to break our motor (E)
+
+        //Instantiating objects and initializing variables for the gyro sensor
         parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -103,34 +140,45 @@ public class AdvancedXDrive extends OpMode {
         parameters.loggingEnabled = false;
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-
         imu.initialize(parameters);
 
         angles = null;
-        elevatorPositionIndex = 0;
 
     }
 
     public void loop() {
-        telemetry.addData("Elevator Index", elevatorPositionIndex);
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, DEGREES);;
+        telemetry.addData("angleOffset", angleOffset);
 
-        currentRobotAngle = angles.firstAngle;
-        //Initializing the controller joysticks
+        //getting the angle of the robot from the IMU
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, DEGREES);
+        currentRobotAngle = angles.firstAngle - angleOffset;
+
+        if(gamepad1.b) {
+            angleOffset = angles.firstAngle;
+        }
+
+        //Setting the reused analog values on the controller to more easily accessible variables
         gamepad1LeftStickX = gamepad1.left_stick_x;
         gamepad1LeftStickY = gamepad1.left_stick_y;
-        gamepad1RightStickX = gamepad1.right_stick_x;
+        gamepad2LeftStickY = gamepad2.left_stick_y;
         gamepad1RightStickY = gamepad1.right_stick_y;
-        gamepad1LeftStickAngle = Math.atan2(gamepad1LeftStickY, gamepad1LeftStickX);
+        gamepad1LeftTrigger = gamepad1.left_trigger;
+        gamepad1RightTrigger = gamepad1.right_trigger;
 
-        //This makes the robot move according to the 'front' of the field based on its position as we start the program
-        if(Math.abs(gamepad1LeftStickX) >= JOYSTICK_TOLERANCE || Math.abs(gamepad1LeftStickY) >= JOYSTICK_TOLERANCE) {
-            leftFrontPower = Math.cos((gamepad1LeftStickAngle + (Math.PI / 4)) + Math.toRadians(currentRobotAngle)) * -1;
+        //Holonomic controls according to what direction the robot is facing when we start the program
+        if(Math.abs(gamepad1LeftStickX) >= TOLERANCE || Math.abs(gamepad1LeftStickY) >= TOLERANCE) {
+            //Uses atan2 to convert the x and y values of the controller to an angle
+            gamepad1LeftStickAngle = Math.atan2(gamepad1LeftStickY, gamepad1LeftStickX);
+
+            /*Determines what power each wheel should get based on the angle we get from the stick plus the
+            current robot angle so that the controls are independent of what direction the robot is facing*/
+            leftFrontPower = Math.cos(gamepad1LeftStickAngle + Math.toRadians(currentRobotAngle) + Math.PI / 4) * -1;
             leftBackPower = Math.sin((gamepad1LeftStickAngle + (Math.PI / 4)) + Math.toRadians(currentRobotAngle));
-            rightFrontPower = Math.sin((gamepad1LeftStickAngle + (Math.PI / 4)) + Math.toRadians(currentRobotAngle)) * -1;
+            rightFrontPower = Math.sin(gamepad1LeftStickAngle + Math.toRadians(currentRobotAngle) + Math.PI / 4) * -1;
             rightBackPower = Math.cos((gamepad1LeftStickAngle + (Math.PI / 4)) + Math.toRadians(currentRobotAngle));
 
+            //Uses the Y of the right stick to determine the speed of the robot's movement with 0 being 0.5 power
             leftFrontPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
             leftBackPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
             rightFrontPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
@@ -141,45 +189,50 @@ public class AdvancedXDrive extends OpMode {
             rightFrontPower = 0.0;
             rightBackPower = 0.0;
         }
-        //Turning the robot
-        if (gamepad1.left_trigger >= JOYSTICK_TOLERANCE) {
-            leftFrontPower += Math.pow(gamepad1.left_trigger, 2);
-            leftBackPower += Math.pow(gamepad1.left_trigger, 2);
-            rightFrontPower += Math.pow(gamepad1.left_trigger, 2);
-            rightBackPower += Math.pow(gamepad1.left_trigger, 2);
+
+        /*Rudimentary turning using exponential controls so that 50% of the trigger only controls 25% of the
+        power while the other 50% controls the other 75%*/
+        if (gamepad1LeftTrigger >= TOLERANCE) {
+            leftFrontPower += Math.pow(gamepad1LeftTrigger, 2);
+            leftBackPower += Math.pow(gamepad1LeftTrigger, 2);
+            rightFrontPower += Math.pow(gamepad1LeftTrigger, 2);
+            rightBackPower += Math.pow(gamepad1LeftTrigger, 2);
+        }
+        if (gamepad1RightTrigger >= TOLERANCE) {
+            leftFrontPower -= Math.pow(gamepad1RightTrigger, 2);
+            leftBackPower -= Math.pow(gamepad1RightTrigger, 2);
+            rightFrontPower -= Math.pow(gamepad1RightTrigger, 2);
+            rightBackPower -= Math.pow(gamepad1RightTrigger, 2);
         }
 
-        if (gamepad1.right_trigger >= JOYSTICK_TOLERANCE) {
-            leftFrontPower -= Math.pow(gamepad1.right_trigger, 2);
-            leftBackPower -= Math.pow(gamepad1.right_trigger, 2);
-            rightFrontPower -= Math.pow(gamepad1.right_trigger, 2);
-            rightBackPower -= Math.pow(gamepad1.right_trigger, 2);
-        }
-        //Pressing the B button makes bristles spin out. Press it again to stop the bristles
-        if (gamepad2.b) {
-            if (!bPressed) {
-                bPressed = true;
+        /*Double toggle for the bristles, when you press the b button the bristles spin out,
+        when you press the x button they spin in, and when you press the most recent one again it stops*/
+        if (gamepad2.x) {
+            if (!xPressed) {
+                xPressed = true;
                 bristlesIn = !bristlesIn;
                 if (bristlesIn) {
                     bristlesOut = false;
                 }
             }
         } else {
-            bPressed = false;
+            xPressed = false;
         }
-        //Pressing the X button spins bristles in. Press it again to stop the bristles.
-        if (gamepad2.x) {
-            if (!xPressed) {
-                xPressed = true;
+        if (gamepad2.b) {
+            if (!bPressed) {
+                bPressed = true;
                 bristlesOut = !bristlesOut;
                 if (bristlesOut) {
                     bristlesIn = false;
                 }
             }
         } else {
-            xPressed = false;
+            bPressed = false;
         }
-        //Cycling through the elevator positions
+
+        /*Cycle for the elevator, when you press the right bumper elevator index goes up by 1 unless it
+        goes above 4 in which case it loops back to 0. When you press the left bumper elevator index goes
+        down as long as it is greater than 0*/
         if (gamepad2.right_bumper) {
             if(!rightBumperPressed) {
                 rightBumperPressed = true;
@@ -192,13 +245,14 @@ public class AdvancedXDrive extends OpMode {
             if(!leftBumperPressed) {
                 leftBumperPressed = true;
                 if(elevatorPositionIndex > 0) {
-                    elevatorPositionIndex = (elevatorPositionIndex - 1) % 5;
+                    elevatorPositionIndex -= 1;
                 }
             }
         } else {
             leftBumperPressed = false;
         }
-        //Pressing the Y button makes the shooter spin
+
+        //Toggle for the shooter wheel, when you press the y button it spins counterclockwise when you press it again it stops
         if (gamepad2.y) {
             if (!yPressed) {
                 yPressed = true;
@@ -207,20 +261,51 @@ public class AdvancedXDrive extends OpMode {
         } else {
             yPressed = false;
         }
-        //Setting the power for the drive train based on joystick values
+
+        if(gamepad2.right_trigger > TOLERANCE) {
+            kickerPosition = 1.0 - (gamepad2.right_trigger * KICKER_REDUCTION); //gives some control over how far forward the kicker is
+            //integer at the end corresponds to how many degrees we turn (1 = 180, 0.5 = 90, 0.25 = 45)
+        } else {
+            kickerPosition = 1.0; //kicker out of the way/full back in poistion 1
+        }
+
+        //Toggle for the collection funnel, when you press the a button the funnels go either down or up
+        if (gamepad2.a) {
+            if (!aPressed) {
+                aPressed = true;
+                funnelDown = !funnelDown;
+            }
+        } else {
+            aPressed = false;
+        }
+
+        //Manual aim for the shooter
+        if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
+            shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_MANUAL_REDUCTION;
+            if (shooterTargetPosition > 1.0) {
+                shooterTargetPosition = 1.0;
+            }
+            if (shooterTargetPosition < 0.0) {
+                shooterTargetPosition = 0.0;
+            }
+        }
+
+        //Setting the power of the wheels based on the calculations above
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
-        //Setting the power for the rotation of the bristles
+
+        //determine how the bristles rotate based on the logic above
         if (bristlesIn) {
-            bristles.setPower(-0.75);
+            bristles.setPower(BRISTLES_POWER);
         } else if (bristlesOut) {
-            bristles.setPower(0.75);
+            bristles.setPower(BRISTLES_POWER * -1);
         } else {
             bristles.setPower(0.0);
         }
-        //Setting the elevator to the position depending on the elevator position index
+
+        //Setting the elevator to a position based on elevatorPositionIndex determined above
         switch (elevatorPositionIndex) {
 
             case 0:
@@ -239,20 +324,31 @@ public class AdvancedXDrive extends OpMode {
                 elevator.setPosition(ElevatorPositions.RING_THREE.positionValue);
 
         }
-        //Turning the shooter on and off
+
+        /*
+        //Setting the aiming servos to shooterTargetPosition
+        shooterLeft.setPosition(shooterTargetPosition);
+        shooterRight.setPosition(shooterTargetPosition);
+         */
+
+        //Spin the shooter wheel or not based on the logic above
         if (shooterRev) {
-            shooter.setPower(-1.0); //full on in "reverse" direction
+            shooter.setPower(SHOOTER_POWER * -1);
         } else {
             shooter.setPower(0.0);
         }
 
-        //The new kicker servo to launch disks, added 12/24/2020
-        if(gamepad2.right_trigger>0) {
-            kicker.setPosition(1-(gamepad2.right_trigger*0.3)); //gives some control over how far forward the kicker is
-            //integer at the end corresponds to how many degrees we turn (1 = 180, 0.5 = 90, 0.25 = 45)
+        kicker.setPosition(kickerPosition);
+
+        /*
+        //Setting the funnels to the down position
+        if (funnelDown) {
+            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
+            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+        } else {
+            funnelLeft.setPosition(FUNNEL_LEFT_UP);
+            funnelRight.setPosition(FUNNEL_RIGHT_UP);
         }
-        else {
-            kicker.setPosition(1); //kicker out of the way/full back in poistion 1
-        }
+        */
     }
 }
