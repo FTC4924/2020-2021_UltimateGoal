@@ -290,17 +290,17 @@ public class AdvancedXDrive extends OpMode {
             }
         }
 
-        //Setting the power of the wheels based on the calculations above
+        //Setting the power of the wheels based on the calculations above //COACH ETHAN says this should be closer to those calculations
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        //determine how the bristles rotate based on the logic above
+        //determine how the bristles rotate based on the logic above //COACH ETHAN says this should be closer to the toggle logic of buttons
         if (bristlesIn) {
             bristles.setPower(BRISTLES_POWER);
         } else if (bristlesOut) {
-            bristles.setPower(BRISTLES_POWER * -1);
+            bristles.setPower(BRISTLES_POWER * -0.25);  //Coach Ethan changed '* -1' to '*-0.25 because we don't want to shoot rings across the field when spitting
         } else {
             bristles.setPower(0.0);
         }
@@ -325,11 +325,9 @@ public class AdvancedXDrive extends OpMode {
 
         }
 
-        /*
         //Setting the aiming servos to shooterTargetPosition
         shooterLeft.setPosition(shooterTargetPosition);
         shooterRight.setPosition(shooterTargetPosition);
-         */
 
         //Spin the shooter wheel or not based on the logic above
         if (shooterRev) {
