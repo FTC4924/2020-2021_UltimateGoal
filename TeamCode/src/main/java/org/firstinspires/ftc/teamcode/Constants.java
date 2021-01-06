@@ -4,7 +4,7 @@ public class Constants {
 
     protected static final double TOLERANCE = 0.05;
     protected static final double TURNING_REDUCTION = 1.0;
-    protected static final double BRISTLES_POWER = 1.0;
+    protected static final double BRISTLES_POWER = 0.35;
     protected static final double SHOOTER_POWER = 1.0;
     protected static final double FUNNEL_LEFT_DOWN = 0.0;
     protected static final double FUNNEL_RIGHT_DOWN = 0.0;
