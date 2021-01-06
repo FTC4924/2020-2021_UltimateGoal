@@ -16,44 +16,44 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 @TeleOp(name="AdvancedXDrive")
 public class AdvancedXDrive extends OpMode {
 
-    private static double shooterTargetPosition;
+    private double shooterTargetPosition;
 
-    private static boolean bPressed;
-    private static boolean xPressed;
-    private static boolean bristlesIn;
-    private static boolean bristlesOut;
+    private boolean bPressed;
+    private boolean xPressed;
+    private boolean bristlesIn;
+    private boolean bristlesOut;
 
-    private static boolean rightBumperPressed;
-    private static boolean leftBumperPressed;
-    private static byte elevatorPositionIndex;
+    private boolean rightBumperPressed;
+    private boolean leftBumperPressed;
+    private byte elevatorPositionIndex;
 
-    private static boolean yPressed;
-    private static boolean shooterRev;
+    private boolean yPressed;
+    private boolean shooterRev;
 
-    private static boolean aPressed;
-    private static boolean funnelDown;
+    private boolean aPressed;
+    private boolean funnelDown;
 
     //Motors and servos
-    private static DcMotor leftFront;
-    private static DcMotor leftBack;
-    private static DcMotor rightFront;
-    private static DcMotor rightBack;
-    private static DcMotor bristles;
-    private static Servo elevator;
-    private static Servo kicker;
-    private static DcMotor shooter;
-    private static Servo funnelLeft;
-    private static Servo funnelRight;
-    private static Servo shooterLifterLeft;
-    private static Servo shooterLifterRight;
+    private DcMotor leftFront;
+    private DcMotor leftBack;
+    private DcMotor rightFront;
+    private DcMotor rightBack;
+    private DcMotor bristles;
+    private Servo elevator;
+    private Servo kicker;
+    private DcMotor shooter;
+    private Servo funnelLeft;
+    private Servo funnelRight;
+    private Servo shooterLifterLeft;
+    private Servo shooterLifterRight;
 
 
     //creating the variables for the gyro sensor
-    private static BNO055IMU imu;
+    private BNO055IMU imu;
 
-    private static Orientation angles;
-    private static double angleOffset;
-    private static double currentRobotAngle;
+    private Orientation angles;
+    private double angleOffset;
+    private double currentRobotAngle;
 
     public void init() {
 
@@ -123,7 +123,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void recalibrateGyro(boolean gamepad1B, double imuZAxis) {
+    private void recalibrateGyro(boolean gamepad1B, double imuZAxis) {
 
         if(gamepad1B) {
             angleOffset = imuZAxis;
@@ -131,7 +131,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void holonomicDrive(double gamepad1LeftStickX, double gamepad1LeftStickY, double gamepad1RightStickY, double gamepad1LeftTrigger, double gamepad1RightTrigger, double currentRobotAngle) {
+    private void holonomicDrive(double gamepad1LeftStickX, double gamepad1LeftStickY, double gamepad1RightStickY, double gamepad1LeftTrigger, double gamepad1RightTrigger, double currentRobotAngle) {
 
         double leftFrontPower;
         double leftBackPower ;
@@ -187,7 +187,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void bristles(boolean gamepad2X, boolean gamepad2B) {
+    private void bristles(boolean gamepad2X, boolean gamepad2B) {
 
         /*Double toggle for the bristles, when you press the b button the bristles spin out,
         when you press the x button they spin in, and when you press the most recent button again,
@@ -225,7 +225,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void elevator(boolean gamepad2LeftBumper, boolean gamepad2RightBumper) {
+    private void elevator(boolean gamepad2LeftBumper, boolean gamepad2RightBumper) {
 
         /*Cycle for the elevator, when you press the right bumper the elevator goes up by one
         position unless it is at the top in which case it loops back to the bottom. When you press
@@ -269,7 +269,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void shooterWheel(boolean gamepad2Y) {
+    private void shooterWheel(boolean gamepad2Y) {
 
         /*Toggle for the shooter wheel, when you press the y button it spins counterclockwise when
         you press it again it stops*/
@@ -290,7 +290,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void shooterLifter(double gamepad2LeftStickY) {
+    private void shooterLifter(double gamepad2LeftStickY) {
 
         if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
             shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_MANUAL_REDUCTION;
@@ -307,7 +307,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void kicker(double gamepad2RightTrigger) {
+    private void kicker(double gamepad2RightTrigger) {
 
         double kickerPosition;
 
@@ -321,7 +321,7 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private static void funnel(boolean gamepad2A) {
+    private void funnel(boolean gamepad2A) {
 
         /*Toggle for the collection funnel, when you press the a button the funnel arms either go up
         or down*/
