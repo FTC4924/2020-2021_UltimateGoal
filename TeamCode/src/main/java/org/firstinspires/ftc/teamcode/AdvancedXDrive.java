@@ -57,7 +57,7 @@ public class AdvancedXDrive extends OpMode {
 
     public void init() {
 
-        shooterTargetPosition = SHOOTER_DEFAULT_POSITION;
+        shooterTargetPosition = SHOOTER_LIFTER_DEFAULT_POSITION;
 
         angleOffset = 0.0;
         currentRobotAngle = 0.0;
