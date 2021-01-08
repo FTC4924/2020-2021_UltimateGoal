@@ -5,12 +5,12 @@ public class Constants {
     protected static final double TOLERANCE = 0.05;
     protected static final double TURNING_REDUCTION = 1.0;
     protected static final double BRISTLES_POWER = 1.0;
-    protected static final double SHOOTER_POWER = 1.0;
+    protected static final double SHOOTER_POWER = 0.75;
     protected static final double FUNNEL_LEFT_DOWN = 0.0;
     protected static final double FUNNEL_RIGHT_DOWN = 0.0;
     protected static final double FUNNEL_LEFT_UP = 0.0;
     protected static final double FUNNEL_RIGHT_UP = 0.0;
-    protected static final double SHOOTER_DEFAULT_POSITION = 0.0;
+    protected static final double SHOOTER_DEFAULT_POSITION = 0.5;
     protected static final double SHOOTER_MANUAL_REDUCTION = 200;
     protected static final double KICKER_REDUCTION = 0.3;
 

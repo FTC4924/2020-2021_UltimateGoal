@@ -66,6 +66,7 @@ public class AdvancedXDrive extends OpMode {
     public Servo funnelRight;
     public Servo shooterLeft;
     public Servo shooterRight;
+    public Servo conveyor;
 
 
     //creating the variables for the gyro sensor
@@ -118,6 +119,7 @@ public class AdvancedXDrive extends OpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         bristles = hardwareMap.get(DcMotor.class, "collection");
+        conveyor = hardwareMap.get(Servo.class, "conveyor");
         elevator = hardwareMap.get(Servo.class, "elevator");
         kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
@@ -282,12 +284,17 @@ public class AdvancedXDrive extends OpMode {
         //Manual aim for the shooter
         if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
             shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_MANUAL_REDUCTION;
-            if (shooterTargetPosition > 1.0) {
-                shooterTargetPosition = 1.0;
+            if (shooterTargetPosition > 0.8) {
+                shooterTargetPosition = 0.8;
             }
-            if (shooterTargetPosition < 0.0) {
-                shooterTargetPosition = 0.0;
+            if (shooterTargetPosition < 0.2) {
+                shooterTargetPosition = 0.2;
             }
+        }
+
+        if (bristlesIn) {
+            elevatorPositionIndex = 0;
+            shooterRev = false;
         }
 
         //Setting the power of the wheels based on the calculations above //COACH ETHAN says this should be closer to those calculations
@@ -296,13 +303,16 @@ public class AdvancedXDrive extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        //determine how the bristles rotate based on the logic above //COACH ETHAN says this should be closer to the toggle logic of buttons
+        //determine how the bristles rotate based on the logic above //COACH ETHAN says this should be closer to the toggle logic of buttons//Sepehr Added Conveyer belt program on 1/5/21
         if (bristlesIn) {
             bristles.setPower(BRISTLES_POWER);
+            conveyor.setPosition(0.0);
         } else if (bristlesOut) {
-            bristles.setPower(BRISTLES_POWER * -0.25);  //Coach Ethan changed '* -1' to '*-0.25 because we don't want to shoot rings across the field when spitting
+            bristles.setPower(BRISTLES_POWER * -0.5);  //Coach Ethan changed '* -1' to '*-0.25 because we don't want to shoot rings across the field when spitting
+            conveyor.setPosition(1.0);
         } else {
             bristles.setPower(0.0);
+            conveyor.setPosition(0.5);
         }
 
         //Setting the elevator to a position based on elevatorPositionIndex determined above
