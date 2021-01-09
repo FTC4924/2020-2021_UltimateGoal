@@ -121,7 +121,7 @@ public class AdvancedXDrive extends OpMode {
         shooterWheel(gamepad2.y);
         shooterLifter(gamepad2.left_stick_y);
         kicker(gamepad2.right_trigger);
-        funnel(gamepad2.a);
+        //funnel(gamepad2.a);
 
     }
 
@@ -298,7 +298,7 @@ public class AdvancedXDrive extends OpMode {
     private void shooterLifter(double gamepad2LeftStickY) {
 
         if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
-            shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_MANUAL_REDUCTION;
+            shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_LIFTER_REDUCTION;
             if (shooterTargetPosition > 1.0) {
                 shooterTargetPosition = 1.0;
             }
@@ -324,15 +324,17 @@ public class AdvancedXDrive extends OpMode {
 
         kicker.setPosition(kickerPosition);
 
-        /*
-        //Setting the funnels to the down position
-        if (funnelDown) {
-            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
-            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
-        } else {
-            funnelLeft.setPosition(FUNNEL_LEFT_UP);
-            funnelRight.setPosition(FUNNEL_RIGHT_UP);
-        }
-        */
     }
+
+    /*
+    //Setting the funnels to the down position
+    if (funnelDown) {
+        funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
+        funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+    } else {
+        funnelLeft.setPosition(FUNNEL_LEFT_UP);
+        funnelRight.setPosition(FUNNEL_RIGHT_UP);
+    }
+    */
+
 }
