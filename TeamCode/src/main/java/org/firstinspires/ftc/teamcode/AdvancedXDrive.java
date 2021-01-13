@@ -88,8 +88,8 @@ public class AdvancedXDrive extends OpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
         shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
-        /*funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
-        funnelRight = hardwareMap.get(Servo.class, "funnelRight");*/
+        funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
+        funnelRight = hardwareMap.get(Servo.class, "funnelRight");
 
         //Initializing the revhub IMU
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -121,7 +121,7 @@ public class AdvancedXDrive extends OpMode {
         shooterWheel(gamepad2.y);
         shooterLifter(gamepad2.left_stick_y);
         kicker(gamepad2.right_trigger);
-        //funnel(gamepad2.a);
+        funnel(gamepad2.a);
 
     }
 
@@ -326,15 +326,23 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    /*
-    //Setting the funnels to the down position
-    if (funnelDown) {
-        funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
-        funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
-    } else {
-        funnelLeft.setPosition(FUNNEL_LEFT_UP);
-        funnelRight.setPosition(FUNNEL_RIGHT_UP);
+    private void funnel(boolean gamepad2A) {
+        if (gamepad2A) {
+            if (!aPressed) {
+                aPressed = true;
+                funnelDown = !funnelDown;
+            }
+        } else {
+            aPressed = false;
+        }
+        //Setting the funnels to the down position
+        if (funnelDown) {
+            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
+            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+        } else {
+            funnelLeft.setPosition(FUNNEL_LEFT_UP);
+            funnelRight.setPosition(FUNNEL_RIGHT_UP);
+        }
     }
-    */
 
 }

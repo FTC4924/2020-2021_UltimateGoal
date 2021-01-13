@@ -8,30 +8,31 @@ public class Constants {
 
     protected static final double TURNING_REDUCTION = 1.0;
 
-    protected static final double FUNNEL_LEFT_DOWN = 0.0;
-    protected static final double FUNNEL_RIGHT_DOWN = 0.0;
+    protected static final double FUNNEL_LEFT_DOWN = 0.1;
+    protected static final double FUNNEL_RIGHT_DOWN = 0.1;
     protected static final double FUNNEL_LEFT_UP = 0.0;
     protected static final double FUNNEL_RIGHT_UP = 0.0;
 
-    protected static final double BRISTLES_POWER = 0.35;
+    protected static final double BRISTLES_POWER = 0.45;
 
-    protected enum ElevatorPositions {
+        protected enum ElevatorPositions {
+            //Coach Ethan changed these (and the way the servo is attached) so down = 1 so we don't force anything like we do
+            // was 0.7, .385, .36, .33, .31
+            DOWN(1.0),
+            MIDDLE(0.62),
+            RING_ONE(0.595),
+            RING_TWO(0.57),
+            RING_THREE(0.55);
 
-        DOWN(0.7),
-        MIDDLE(0.385),
-        RING_ONE(0.36),
-        RING_TWO(0.33),
-        RING_THREE(0.31);
+            public final double positionValue;
 
-        public final double positionValue;
+            ElevatorPositions(double positionValue) {
 
-        ElevatorPositions(double positionValue) {
+                this.positionValue = positionValue;
 
-            this.positionValue = positionValue;
+            }
 
         }
-
-    }
 
     protected static final double KICKER_REDUCTION = 0.3;
 
