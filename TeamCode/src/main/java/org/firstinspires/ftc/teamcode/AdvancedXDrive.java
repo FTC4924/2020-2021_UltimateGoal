@@ -102,6 +102,7 @@ public class AdvancedXDrive extends OpMode {
         imu.initialize(parameters);
 
         angles = null;
+        currentRobotAngle = 0.0;
 
     }
 
@@ -113,27 +114,37 @@ public class AdvancedXDrive extends OpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
         currentRobotAngle = angles.firstAngle - angleOffset;
 
-        recalibrateGyro(gamepad1.b, angles.firstAngle);
+        recalibrateGyro();
 
-        holonomicDrive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_y, gamepad1.left_trigger, gamepad1.right_trigger, currentRobotAngle);
-        bristles(gamepad2.x, gamepad2.b);
-        elevator(gamepad2.left_bumper, gamepad2.right_bumper);
-        shooterWheel(gamepad2.y);
-        shooterLifter(gamepad2.left_stick_y);
-        kicker(gamepad2.right_trigger);
-        funnel(gamepad2.a);
+        holonomicDrive();
+
+        funnel();
+        bristles();
+
+        elevator();
+
+        kicker();
+
+        shooterLifter();
+        shooterWheel();
 
     }
 
-    private void recalibrateGyro(boolean gamepad1B, double imuZAxis) {
+    private void recalibrateGyro() {
 
-        if(gamepad1B) {
-            angleOffset = imuZAxis;
+        if(gamepad1.b) {
+            angleOffset = angles.firstAngle;
         }
 
     }
 
-    private void holonomicDrive(double gamepad1LeftStickX, double gamepad1LeftStickY, double gamepad1RightStickY, double gamepad1LeftTrigger, double gamepad1RightTrigger, double currentRobotAngle) {
+    private void holonomicDrive() {
+
+        double gamepad1LeftStickX = gamepad1.left_stick_x;
+        double gamepad1LeftStickY = gamepad1.left_stick_y;
+        double gamepad1RightStickY = gamepad2.right_stick_y;
+        double gamepad1LeftTrigger = gamepad1.left_trigger;
+        double gamepad1RightTrigger = gamepad1.right_trigger;
 
         double leftFrontPower;
         double leftBackPower ;
@@ -149,17 +160,17 @@ public class AdvancedXDrive extends OpMode {
             /*Determines what power each wheel should get based on the angle we get from the stick
             plus the current robot angle so that the controls are independent of what direction the
             robot is facing*/
-            leftFrontPower = Math.cos(gamepad1LeftStickAngle + currentRobotAngle + Math.PI / 4) * -1;
-            leftBackPower = Math.sin(gamepad1LeftStickAngle + currentRobotAngle + (Math.PI / 4));
-            rightFrontPower = Math.sin(gamepad1LeftStickAngle + currentRobotAngle + Math.PI / 4) * -1;
-            rightBackPower = Math.cos(gamepad1LeftStickAngle + currentRobotAngle + (Math.PI / 4));
+            leftFrontPower = Math.cos(gamepad1LeftStickAngle + Math.PI / 4 + currentRobotAngle) * -1;
+            leftBackPower = Math.sin(gamepad1LeftStickAngle + Math.PI / 4 + currentRobotAngle);
+            rightFrontPower = Math.sin(gamepad1LeftStickAngle + Math.PI / 4 + currentRobotAngle) * -1;
+            rightBackPower = Math.cos(gamepad1LeftStickAngle + Math.PI / 4 + currentRobotAngle);
 
             /*Uses the Y of the right stick to determine the speed of the robot's movement with 0
             being 0.5 power*/
-            leftFrontPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
-            leftBackPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
-            rightFrontPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
-            rightBackPower *= ((-1 * gamepad1RightStickY) + 1) / 2;
+            leftFrontPower *= (-1 * gamepad1RightStickY + 1) / 2;
+            leftBackPower *= (-1 * gamepad1RightStickY + 1) / 2;
+            rightFrontPower *= (-1 * gamepad1RightStickY + 1) / 2;
+            rightBackPower *= (-1 * gamepad1RightStickY + 1) / 2;
         } else {
             leftFrontPower = 0.0;
             leftBackPower = 0.0;
@@ -189,12 +200,36 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private void bristles(boolean gamepad2X, boolean gamepad2B) {
+    private void funnel() {
+
+        /*Toggle for the collection funnel, when you press the a button the funnel arms either go up
+        or down*/
+        if (gamepad2.a) {
+            if (!aPressed) {
+                aPressed = true;
+                funnelDown = !funnelDown;
+            }
+        } else {
+            aPressed = false;
+        }
+
+        /*//Setting the funnels to the down position
+        if (funnelDown) {
+            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
+            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+        } else {
+            funnelLeft.setPosition(FUNNEL_LEFT_UP);
+            funnelRight.setPosition(FUNNEL_RIGHT_UP);
+        }*/
+
+    }
+
+    private void bristles() {
 
         /*Double toggle for the bristles, when you press the b button the bristles spin out,
         when you press the x button they spin in, and when you press the most recent button again,
         they stop*/
-        if (gamepad2X) {
+        if (gamepad2.x) {
             if (!xPressed) {
                 xPressed = true;
                 bristlesIn = !bristlesIn;
@@ -205,7 +240,7 @@ public class AdvancedXDrive extends OpMode {
         } else {
             xPressed = false;
         }
-        if (gamepad2B) {
+        if (gamepad2.b) {
             if (!bPressed) {
                 bPressed = true;
                 bristlesOut = !bristlesOut;
@@ -230,13 +265,13 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private void elevator(boolean gamepad2LeftBumper, boolean gamepad2RightBumper) {
+    private void elevator() {
 
         /*Cycle for the elevator, when you press the right bumper the elevator goes up by one
         position unless it is at the top in which case it loops back to the bottom. When you press
         the left bumper the elevator goes goes down by one position as long as it is not at the
         bottom.*/
-        if (gamepad2RightBumper) {
+        if (gamepad2.right_bumper) {
             if (!rightBumperPressed) {
                 rightBumperPressed = true;
                 elevatorPositionIndex = (byte)((elevatorPositionIndex + 1) % 5);
@@ -244,7 +279,7 @@ public class AdvancedXDrive extends OpMode {
         } else {
             rightBumperPressed = false;
         }
-        if (gamepad2LeftBumper) {
+        if (gamepad2.left_bumper) {
             if (!leftBumperPressed) {
                 leftBumperPressed = true;
                 if (elevatorPositionIndex > 0) {
@@ -274,11 +309,46 @@ public class AdvancedXDrive extends OpMode {
 
     }
 
-    private void shooterWheel(boolean gamepad2Y) {
+    private void kicker() {
+
+        double gamepad2RightTrigger = gamepad2.right_trigger;
+
+        double kickerPosition;
+
+        if(gamepad2RightTrigger > TOLERANCE) {
+            kickerPosition = 1.0 - (gamepad2RightTrigger * KICKER_REDUCTION);
+        } else {
+            kickerPosition = 1.0;
+        }
+
+        kicker.setPosition(kickerPosition);
+
+    }
+
+    private void shooterLifter() {
+
+        double gamepad2LeftStickY = gamepad2.left_stick_y;
+
+        if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
+            shooterTargetPosition -= gamepad2LeftStickY * SHOOTER_LIFTER_REDUCTION;
+            if (shooterTargetPosition > SHOOTER_LIFTER_MAX_POSITION) {
+                shooterTargetPosition = SHOOTER_LIFTER_MAX_POSITION;
+            }
+            if (shooterTargetPosition < SHOOTER_LIFTER_MIN_POSITION) {
+                shooterTargetPosition = SHOOTER_LIFTER_MIN_POSITION;
+            }
+        }
+
+        shooterLifterLeft.setPosition(shooterTargetPosition);
+        shooterLifterRight.setPosition(shooterTargetPosition);
+
+    }
+
+    private void shooterWheel() {
 
         /*Toggle for the shooter wheel, when you press the y button it spins counterclockwise when
         you press it again it stops*/
-        if (gamepad2Y) {
+        if (gamepad2.y) {
             if (!yPressed) {
                 yPressed = true;
                 shooterRev = !shooterRev;
@@ -293,56 +363,6 @@ public class AdvancedXDrive extends OpMode {
             shooter.setPower(0.0);
         }
 
-    }
-
-    private void shooterLifter(double gamepad2LeftStickY) {
-
-        if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
-            shooterTargetPosition -= gamepad2LeftStickY / SHOOTER_LIFTER_REDUCTION;
-            if (shooterTargetPosition > 1.0) {
-                shooterTargetPosition = 1.0;
-            }
-            if (shooterTargetPosition < 0.0) {
-                shooterTargetPosition = 0.0;
-            }
-        }
-
-        shooterLifterLeft.setPosition(shooterTargetPosition);
-        shooterLifterRight.setPosition(shooterTargetPosition);
-
-    }
-
-    private void kicker(double gamepad2RightTrigger) {
-
-        double kickerPosition;
-
-        if (gamepad2RightTrigger > TOLERANCE) {
-            kickerPosition = 1.0 - (gamepad2RightTrigger * KICKER_REDUCTION);
-        } else {
-            kickerPosition = 1.0;
-        }
-
-        kicker.setPosition(kickerPosition);
-
-    }
-
-    private void funnel(boolean gamepad2A) {
-        if (gamepad2A) {
-            if (!aPressed) {
-                aPressed = true;
-                funnelDown = !funnelDown;
-            }
-        } else {
-            aPressed = false;
-        }
-        //Setting the funnels to the down position
-        if (funnelDown) {
-            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
-            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
-        } else {
-            funnelLeft.setPosition(FUNNEL_LEFT_UP);
-            funnelRight.setPosition(FUNNEL_RIGHT_UP);
-        }
     }
 
 }
