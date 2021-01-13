@@ -213,14 +213,14 @@ public class AdvancedXDrive extends OpMode {
             aPressed = false;
         }
 
-        /*//Setting the funnels to the down position
+        //Setting the funnels to the down position
         if (funnelDown) {
             funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
             funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
         } else {
             funnelLeft.setPosition(FUNNEL_LEFT_UP);
             funnelRight.setPosition(FUNNEL_RIGHT_UP);
-        }*/
+        }
 
     }
 
