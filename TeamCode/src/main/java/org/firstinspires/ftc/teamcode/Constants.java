@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+/**
+ * Contains constants for all of the programs in one file for easy access.
+ */
 public class Constants {
 
     private static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
@@ -16,8 +19,8 @@ public class Constants {
     protected static final double BRISTLES_POWER = 0.45;
 
         protected enum ElevatorPositions {
-            //Coach Ethan changed these (and the way the servo is attached) so down = 1 so we don't force anything like we do
-            // was 0.7, .385, .36, .33, .31
+            // Coach Ethan wanted these changed (and the way the servo is attached) so that way DOWN = 1 so we don't force anything like we do
+            // was 0.7, 0.385, 0.36, 0.33, and 0.31
             DOWN(1.0),
             MIDDLE(0.62),
             RING_ONE(0.595),
