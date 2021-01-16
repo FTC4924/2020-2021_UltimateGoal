@@ -13,7 +13,7 @@ public class Constants {
     protected static final double FUNNEL_LEFT_UP = 0.0;
     protected static final double FUNNEL_RIGHT_UP = 0.0;
 
-    protected static final double BRISTLES_POWER = 0.45;
+    protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
         protected enum ElevatorPositions {
             //Coach Ethan changed these (and the way the servo is attached) so down = 1 so we don't force anything like we do
@@ -41,6 +41,6 @@ public class Constants {
     protected static final double SHOOTER_LIFTER_DEFAULT_POSITION = 0.5;
     protected static final double SHOOTER_LIFTER_REDUCTION = .005;
 
-    protected static final double SHOOTER_POWER = 1.0;
+    protected static final double SHOOTER_POWER = .75;
 
 }

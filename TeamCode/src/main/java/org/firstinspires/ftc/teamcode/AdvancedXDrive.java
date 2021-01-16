@@ -16,16 +16,18 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 @TeleOp(name="AdvancedXDrive")
 public class AdvancedXDrive extends OpMode {
 
-    private double shooterTargetPosition;
-
     private boolean bPressed;
     private boolean xPressed;
+    private boolean rightStickPressed;
+    private boolean collectionMaxPower;
     private boolean bristlesIn;
     private boolean bristlesOut;
 
     private boolean rightBumperPressed;
     private boolean leftBumperPressed;
     private byte elevatorPositionIndex;
+
+    private double shooterLifterTargetPosition;
 
     private boolean yPressed;
     private boolean shooterRev;
@@ -48,7 +50,6 @@ public class AdvancedXDrive extends OpMode {
     private Servo shooterLifterRight;
     private Servo conveyor;
 
-
     //creating the variables for the gyro sensor
     private BNO055IMU imu;
 
@@ -57,8 +58,6 @@ public class AdvancedXDrive extends OpMode {
     private double currentRobotAngle;
 
     public void init() {
-
-        shooterTargetPosition = SHOOTER_LIFTER_DEFAULT_POSITION;
 
         angleOffset = 0.0;
         currentRobotAngle = 0.0;
@@ -71,6 +70,8 @@ public class AdvancedXDrive extends OpMode {
         rightBumperPressed = false;
         leftBumperPressed = false;
         elevatorPositionIndex = 0;
+
+        shooterLifterTargetPosition = SHOOTER_LIFTER_DEFAULT_POSITION;
 
         yPressed = false;
         shooterRev = false;
@@ -142,7 +143,7 @@ public class AdvancedXDrive extends OpMode {
 
         double gamepad1LeftStickX = gamepad1.left_stick_x;
         double gamepad1LeftStickY = gamepad1.left_stick_y;
-        double gamepad1RightStickY = gamepad2.right_stick_y;
+        double gamepad1RightStickY = gamepad1.right_stick_y;
         double gamepad1LeftTrigger = gamepad1.left_trigger;
         double gamepad1RightTrigger = gamepad1.right_trigger;
 
@@ -251,12 +252,24 @@ public class AdvancedXDrive extends OpMode {
         } else {
             bPressed = false;
         }
+        if (gamepad2.right_stick_button) {
+            if (!rightStickPressed) {
+                rightStickPressed = true;
+                collectionMaxPower = !collectionMaxPower;
+            }
+        } else {
+            rightStickPressed = false;
+        }
 
         if (bristlesIn) {
-            bristles.setPower(BRISTLES_POWER);
+            if(collectionMaxPower){
+                bristles.setPower(1.0);
+            } else {
+                bristles.setPower(BRISTLES_DEFAULT_POWER);
+            }
             conveyor.setPosition(0.0);
         } else if (bristlesOut) {
-            bristles.setPower(BRISTLES_POWER * -1);
+            bristles.setPower(BRISTLES_DEFAULT_POWER * -1);
             conveyor.setPosition(1.0);
         } else {
             bristles.setPower(0.0);
@@ -288,6 +301,10 @@ public class AdvancedXDrive extends OpMode {
             }
         } else {
             leftBumperPressed = false;
+        }
+
+        if(bristlesIn) {
+            elevatorPositionIndex = 0;
         }
 
         switch(elevatorPositionIndex) {
@@ -330,17 +347,17 @@ public class AdvancedXDrive extends OpMode {
         double gamepad2LeftStickY = gamepad2.left_stick_y;
 
         if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
-            shooterTargetPosition -= gamepad2LeftStickY * SHOOTER_LIFTER_REDUCTION;
-            if (shooterTargetPosition > SHOOTER_LIFTER_MAX_POSITION) {
-                shooterTargetPosition = SHOOTER_LIFTER_MAX_POSITION;
+            shooterLifterTargetPosition -= gamepad2LeftStickY * SHOOTER_LIFTER_REDUCTION;
+            if (shooterLifterTargetPosition > SHOOTER_LIFTER_MAX_POSITION) {
+                shooterLifterTargetPosition = SHOOTER_LIFTER_MAX_POSITION;
             }
-            if (shooterTargetPosition < SHOOTER_LIFTER_MIN_POSITION) {
-                shooterTargetPosition = SHOOTER_LIFTER_MIN_POSITION;
+            if (shooterLifterTargetPosition < SHOOTER_LIFTER_MIN_POSITION) {
+                shooterLifterTargetPosition = SHOOTER_LIFTER_MIN_POSITION;
             }
         }
 
-        shooterLifterLeft.setPosition(shooterTargetPosition);
-        shooterLifterRight.setPosition(shooterTargetPosition);
+        shooterLifterLeft.setPosition(shooterLifterTargetPosition);
+        shooterLifterRight.setPosition(shooterLifterTargetPosition);
 
     }
 
