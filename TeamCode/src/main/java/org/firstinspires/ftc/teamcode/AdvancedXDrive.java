@@ -50,7 +50,8 @@ public class AdvancedXDrive extends OpMode {
     private Servo shooterLifterRight;
     private Servo conveyor;
 
-    //creating the variables for the gyro sensor
+
+    //Creating the variables for the gyro sensor
     private BNO055IMU imu;
 
     private Orientation angles;
@@ -143,7 +144,7 @@ public class AdvancedXDrive extends OpMode {
 
         double gamepad1LeftStickX = gamepad1.left_stick_x;
         double gamepad1LeftStickY = gamepad1.left_stick_y;
-        double gamepad1RightStickY = gamepad1.right_stick_y;
+        double gamepad1RightStickY = gamepad2.right_stick_y;
         double gamepad1LeftTrigger = gamepad1.left_trigger;
         double gamepad1RightTrigger = gamepad1.right_trigger;
 
