@@ -17,21 +17,21 @@ public class Constants {
 
     protected static final double TURNING_REDUCTION = 1.0;
 
-    protected static final double FUNNEL_LEFT_DOWN = 0.1;
-    protected static final double FUNNEL_RIGHT_DOWN = 0.1;
+    protected static final double FUNNEL_LEFT_DOWN = 0.3;
+    protected static final double FUNNEL_RIGHT_DOWN = 0.3;
     protected static final double FUNNEL_LEFT_UP = 0.0;
     protected static final double FUNNEL_RIGHT_UP = 0.0;
 
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
         protected enum ElevatorPositions {
-            // Coach Ethan wanted these changed (and the way the servo is attached) so that way DOWN = 1 so we don't force anything like we do
-            // was 0.7, 0.385, 0.36, 0.33, and 0.31
+
             DOWN(1.0),
             MIDDLE(0.62),
             RING_ONE(0.595),
             RING_TWO(0.57),
             RING_THREE(0.55);
+            //UNJAM(0.52); //Requested by Serena, added by Coach Ethan 1/19/2021
 
             public final double positionValue;
 

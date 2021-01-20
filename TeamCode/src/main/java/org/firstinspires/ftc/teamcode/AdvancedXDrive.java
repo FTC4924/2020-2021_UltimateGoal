@@ -84,7 +84,7 @@ public class AdvancedXDrive extends OpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         bristles = hardwareMap.get(DcMotor.class, "collection");
-        conveyor = hardwareMap.get(Servo.class, "conveyor");
+        //conveyor = hardwareMap.get(Servo.class, "conveyor"); Not needed for first competition!
         elevator = hardwareMap.get(Servo.class, "elevator");
         kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
@@ -144,7 +144,7 @@ public class AdvancedXDrive extends OpMode {
 
         double gamepad1LeftStickX = gamepad1.left_stick_x;
         double gamepad1LeftStickY = gamepad1.left_stick_y;
-        double gamepad1RightStickY = gamepad2.right_stick_y;
+        double gamepad1RightStickY = gamepad1.right_stick_y;
         double gamepad1LeftTrigger = gamepad1.left_trigger;
         double gamepad1RightTrigger = gamepad1.right_trigger;
 
@@ -268,13 +268,13 @@ public class AdvancedXDrive extends OpMode {
             } else {
                 bristles.setPower(BRISTLES_DEFAULT_POWER);
             }
-            conveyor.setPosition(0.0);
+            //conveyor.setPosition(0.0); Not needed for first competition!
         } else if (bristlesOut) {
             bristles.setPower(BRISTLES_DEFAULT_POWER * -1);
-            conveyor.setPosition(1.0);
+            //conveyor.setPosition(1.0); Not needed for first competition!
         } else {
             bristles.setPower(0.0);
-            conveyor.setPosition(0.5);
+            //conveyor.setPosition(0.5); Not needed for first competition!
         }
 
     }
@@ -323,6 +323,7 @@ public class AdvancedXDrive extends OpMode {
                 break;
             case 4:
                 elevator.setPosition(ElevatorPositions.RING_THREE.positionValue);
+                break;
         }
 
     }
