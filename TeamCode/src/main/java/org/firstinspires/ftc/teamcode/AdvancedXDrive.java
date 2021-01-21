@@ -306,7 +306,7 @@ public class AdvancedXDrive extends OpMode {
         if (gamepad2.right_bumper) {
             if (!rightBumperPressed) {
                 rightBumperPressed = true;
-                elevatorPositionIndex = (byte)((elevatorPositionIndex + 1) % 5);
+                elevatorPositionIndex = (byte)((elevatorPositionIndex + 1) % 6);
             }
         } else {
             rightBumperPressed = false;
@@ -342,6 +342,9 @@ public class AdvancedXDrive extends OpMode {
                 break;
             case 4:
                 elevator.setPosition(ElevatorPositions.RING_THREE.positionValue);
+                break;
+            case 5:
+                elevator.setPosition(ElevatorPositions.UNJAM.positionValue);
                 break;
         }
 

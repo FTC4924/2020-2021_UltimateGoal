@@ -24,24 +24,24 @@ public class Constants {
 
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
-        protected enum ElevatorPositions {
+    protected enum ElevatorPositions {
 
-            DOWN(1.0),
-            MIDDLE(0.62),
-            RING_ONE(0.595),
-            RING_TWO(0.57),
-            RING_THREE(0.55);
-            //UNJAM(0.52); //Requested by Serena, added by Coach Ethan 1/19/2021
+        DOWN(1.0),
+        MIDDLE(0.62),
+        RING_ONE(0.595),
+        RING_TWO(0.57),
+        RING_THREE(0.55),
+        UNJAM(0.52); //Requested by Serena, added by Coach Ethan 1/19/2021
 
-            public final double positionValue;
+        public final double positionValue;
 
-            ElevatorPositions(double positionValue) {
+        ElevatorPositions(double positionValue) {
 
-                this.positionValue = positionValue;
-
-            }
+            this.positionValue = positionValue;
 
         }
+
+    }
 
     protected static final double KICKER_REDUCTION = 0.3;
 
