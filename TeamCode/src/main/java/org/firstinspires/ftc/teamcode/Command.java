@@ -7,20 +7,25 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 
 public class Command {
 
-    public double moveSpeed = 0;
-    public double moveAngle = 0;
-    public double moveDuration = 0;
     public CommandType commandType;
+    public double duration = 0;
+    public double angle = 0;
+    public double speed = 0;
 
-    public Command(CommandType commandType, double angle, double speed, double duration) {
+    public Command(CommandType commandType, double duration, double angle, double speed) {
 
         this.commandType = commandType;
-
-        if (commandType == CommandType.MOVE) {
-            moveSpeed = speed;
-            moveAngle = angle - Math.PI/2;
-            moveDuration = duration;
-        }
+        this.duration = duration;
+        this.angle = Math.toRadians(angle) - Math.PI/2;
+        this.speed = speed;
 
     }
+
+    public Command(CommandType commandType, double angle) {
+
+        this.commandType = commandType;
+        this.angle = Math.toRadians(angle);
+
+    }
+
 }

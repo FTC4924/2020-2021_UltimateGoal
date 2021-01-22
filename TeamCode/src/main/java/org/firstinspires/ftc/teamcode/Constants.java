@@ -7,7 +7,8 @@ public class Constants {
 
     public enum CommandType {
 
-        MOVE
+        MOVE,
+        TURN
 
     }
 
