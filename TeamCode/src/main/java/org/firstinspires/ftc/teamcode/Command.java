@@ -16,7 +16,7 @@ public class Command {
 
         this.commandType = commandType;
         this.duration = duration;
-        this.angle = Math.toRadians(angle) - Math.PI/2;
+        this.angle = Math.toRadians(angle) ;
         this.speed = speed;
 
     }

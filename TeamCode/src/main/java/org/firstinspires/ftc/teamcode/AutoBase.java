@@ -10,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.util.ArrayList;
 
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.RADIANS;
 import static org.firstinspires.ftc.teamcode.Constants.TOLERANCE;
 import static org.firstinspires.ftc.teamcode.Command.*;
@@ -66,8 +67,6 @@ public abstract class AutoBase extends OpMode {
         currentCommand = commands.get(0);
         commandIndex = 0;
 
-        resetStartTime();
-
     }
 
     public void start() {
@@ -75,20 +74,19 @@ public abstract class AutoBase extends OpMode {
     }
 
     public void loop() {
-        telemetry.addData("time", time);
-        telemetry.addData("error", robotAngleError);
         double leftFrontPower = 0;
         double leftBackPower = 0;
         double rightFrontPower = 0;
         double rightBackPower = 0;
-        if(currentRobotAngle < 0) {
-            robotAngleError = currentRobotAngle - targetAngle;
-        } else {
-            robotAngleError = currentRobotAngle + targetAngle;
-        }
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
         currentRobotAngle = angles.firstAngle;
+
+        robotAngleError = targetAngle - currentRobotAngle;
+        robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+
+        telemetry.addData("robot Angle", Math.toDegrees(currentRobotAngle));
+        telemetry.addData("error", robotAngleError);
 
         switch (currentCommand.commandType) {
 
@@ -101,10 +99,10 @@ public abstract class AutoBase extends OpMode {
                     /*Determines what power each wheel should get based on the angle we get from the stick
                     plus the current robot angle so that the controls are independent of what direction the
                     robot is facing*/
-                    leftFrontPower = Math.cos(currentCommand.angle + Math.PI / 4 + currentRobotAngle) * -1;
-                    leftBackPower = Math.sin(currentCommand.angle + Math.PI / 4 + currentRobotAngle);
-                    rightFrontPower = Math.sin(currentCommand.angle + Math.PI / 4 + currentRobotAngle) * -1;
-                    rightBackPower = Math.cos(currentCommand.angle + Math.PI / 4 + currentRobotAngle);
+                    leftFrontPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
+                    leftBackPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
+                    rightFrontPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
+                    rightBackPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
 
                     // Adjusts motor speed.
                     leftFrontPower *= currentCommand.speed;
@@ -120,11 +118,8 @@ public abstract class AutoBase extends OpMode {
                 if(!angleSet) {
                     angleSet = true;
                     targetAngle = currentCommand.angle;
-                    if(currentRobotAngle < 0) {
-                        robotAngleError = currentRobotAngle - targetAngle;
-                    } else {
-                        robotAngleError = currentRobotAngle + targetAngle;
-                    }
+                    robotAngleError = targetAngle - currentRobotAngle;
+                    robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
                 }
                 if(Math.abs(robotAngleError) < 0.05) {
                     startNextCommand();
@@ -132,10 +127,10 @@ public abstract class AutoBase extends OpMode {
                 break;
         }
 
-        leftFrontPower -= robotAngleError * 2;
-        leftBackPower -= robotAngleError * 2;
-        rightFrontPower -= robotAngleError * 2;
-        rightBackPower -= robotAngleError * 2;
+        leftFrontPower += robotAngleError * 2;
+        leftBackPower += robotAngleError * 2;
+        rightFrontPower += robotAngleError * 2;
+        rightBackPower += robotAngleError * 2;
 
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
