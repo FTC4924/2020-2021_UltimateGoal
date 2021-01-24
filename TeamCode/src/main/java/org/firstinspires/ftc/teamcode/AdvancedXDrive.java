@@ -6,11 +6,25 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.RADIANS;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.teamcode.Constants.*;
 
 @TeleOp(name="AdvancedXDrive")
@@ -48,7 +62,7 @@ public class AdvancedXDrive extends OpMode {
     private Servo funnelRight;
     private Servo shooterLifterLeft;
     private Servo shooterLifterRight;
-    private Servo conveyor;
+    //private Servo conveyor;
 
 
     //Creating the variables for the gyro sensor
@@ -57,6 +71,31 @@ public class AdvancedXDrive extends OpMode {
     private Orientation angles;
     private double angleOffset;
     private double currentRobotAngle;
+    private double targetAngle;
+    private boolean targetVisible;
+    private double robotAngleError;
+
+    private OpenGLMatrix robotFromCamera;
+    private OpenGLMatrix robotLocationTransform;
+    private OpenGLMatrix lastLocation;
+    private VectorF robotPosition;
+    private Orientation robotRotation;
+
+    WebcamName webcam1;
+
+    int cameraMonitorViewId;
+    VuforiaLocalizer.Parameters vuforiaParameters;
+    private VuforiaLocalizer vuforia;
+
+    VuforiaTrackables targetsUltimateGoal;
+
+    VuforiaTrackable blueTowerGoalTarget;
+    VuforiaTrackable redTowerGoalTarget;
+    VuforiaTrackable redAllianceTarget;
+    VuforiaTrackable blueAllianceTarget;
+    VuforiaTrackable frontWallTarget;
+
+    List<VuforiaTrackable> allTrackables;
 
     public void init() {
 
@@ -96,7 +135,7 @@ public class AdvancedXDrive extends OpMode {
         //Initializing the Revhub IMU
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.loggingEnabled = false;
 
@@ -105,6 +144,54 @@ public class AdvancedXDrive extends OpMode {
 
         angles = null;
         currentRobotAngle = 0.0;
+
+        robotFromCamera = OpenGLMatrix
+                .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
+        robotLocationTransform = null;
+        lastLocation = null;
+        robotPosition = null;
+        robotRotation = null;
+
+        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        vuforiaParameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+
+        vuforiaParameters.vuforiaLicenseKey = VUFORIA_KEY;
+        vuforiaParameters.cameraName = webcam1;
+
+        vuforia = ClassFactory.getInstance().createVuforia(vuforiaParameters);
+
+        targetsUltimateGoal = this.vuforia.loadTrackablesFromAsset("UltimateGoal");
+
+        VuforiaTrackable blueTowerGoalTarget = targetsUltimateGoal.get(0);
+        blueTowerGoalTarget.setName("Blue Tower Goal Target");
+        VuforiaTrackable redTowerGoalTarget = targetsUltimateGoal.get(1);
+        redTowerGoalTarget.setName("Red Tower Goal Target");
+        VuforiaTrackable redAllianceTarget = targetsUltimateGoal.get(2);
+        redAllianceTarget.setName("Red Alliance Target");
+        VuforiaTrackable blueAllianceTarget = targetsUltimateGoal.get(3);
+        blueAllianceTarget.setName("Blue Alliance Target");
+        VuforiaTrackable frontWallTarget = targetsUltimateGoal.get(4);
+        frontWallTarget.setName("Front Wall Target");
+
+        blueTowerGoalTarget.setLocation(OpenGLMatrix
+                .translation(0, 0, 0)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0 , 0)));
+
+        redTowerGoalTarget.setLocation(OpenGLMatrix
+                .translation(0, 0, 0)
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0, 0)));
+
+        allTrackables = new ArrayList<VuforiaTrackable>();
+        allTrackables.addAll(targetsUltimateGoal);
+
+        for (VuforiaTrackable trackable : allTrackables) {
+            ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters.cameraDirection);
+        }
+
+        targetsUltimateGoal.activate();
 
     }
 
@@ -200,6 +287,68 @@ public class AdvancedXDrive extends OpMode {
             leftBackPower -= Math.pow(gamepad1RightTrigger, 2);
             rightFrontPower -= Math.pow(gamepad1RightTrigger, 2);
             rightBackPower -= Math.pow(gamepad1RightTrigger, 2);
+        }
+
+        if (gamepad2.dpad_up) {
+            targetVisible = false;
+            for (VuforiaTrackable trackable : allTrackables) {
+                if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                    //telemetry.addData("Visible Target", trackable.getName());
+                    targetVisible = true;
+
+                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    if (robotLocationTransform != null) {
+
+                        lastLocation = robotLocationTransform;
+
+                    }
+
+                    break;
+
+                }
+            }
+
+            if (targetVisible) {
+                robotPosition = lastLocation.getTranslation();
+                telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                        robotPosition.get(0), robotPosition.get(1), robotPosition.get(2));
+                telemetry.addData("TargetAngle", Math.toDegrees(targetAngle));
+
+                robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
+                telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
+
+                targetAngle = -1 * Math.atan((robotPosition.get(2) - 714.4) / (1828.8 + robotPosition.get(0)));
+                telemetry.addData("Needed Robot Angle", targetAngle);
+                robotAngleError = targetAngle - currentRobotAngle;
+                telemetry.addData("Robot Angle Error", robotAngleError);
+
+                leftFrontPower += robotAngleError;
+                leftBackPower += robotAngleError;
+                rightFrontPower += robotAngleError;
+                rightBackPower += robotAngleError;
+
+                /*distanceFromImage = Math.sqrt(Math.pow(robotPosition.get(0),2) + Math.pow(robotPosition.get(2),2));
+
+                for (int i = 0; i < aimingLookupTable.length - 1; i++) {
+                    if (distanceFromImage >= aimingLookupTable[i][0] && distanceFromImage <= aimingLookupTable[i + 1][0]) {
+
+                        lowerLookupTableIndex = i;
+
+                        break;
+
+                    }
+                }
+
+                verticalAngleSlope = (aimingLookupTable[lowerLookupTableIndex + 1][1] - aimingLookupTable[lowerLookupTableIndex][1] / (aimingLookupTable[lowerLookupTableIndex + 1][0] - aimingLookupTable[lowerLookupTableIndex][0]));
+                verticalAngleYIntercept = aimingLookupTable[lowerLookupTableIndex][1] - verticalAngleSlope * aimingLookupTable[lowerLookupTableIndex][0];
+                neededVerticalAngle = (int) Math.round(verticalAngleSlope*distanceFromImage+verticalAngleYIntercept);
+                telemetry.addData("Needed Vertical Angle", neededVerticalAngle);*/
+
+                //telemetry.addData("Needed Cam Position", neededCamPosition);
+                //camMotor.setTargetPosition(neededCamPosition);
+
+                //telemetry.addData("Current Cam Motor Target Position", camMotor.getTargetPosition());
+            }
         }
 
         //Sets the wheel powers
