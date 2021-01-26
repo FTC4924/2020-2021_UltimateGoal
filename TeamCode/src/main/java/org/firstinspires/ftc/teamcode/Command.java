@@ -10,14 +10,15 @@ public class Command {
     public CommandType commandType;
     public double duration = 0;
     public double angle = 0;
-    public double speed = 0;
+    public double power = 0;
+    public ElevatorPositions elevatorPosition;
 
-    public Command(CommandType commandType, double duration, double angle, double speed) {
+    public Command(CommandType commandType, double duration, double angle, double power) {
 
         this.commandType = commandType;
         this.duration = duration;
         this.angle = Math.toRadians(angle) ;
-        this.speed = speed;
+        this.power = power;
 
     }
 
@@ -25,7 +26,20 @@ public class Command {
 
         this.commandType = commandType;
         this.angle = Math.toRadians(angle);
+        this.duration = angle;
+        this.power = angle;
 
     }
+
+    public Command(CommandType commandType, ElevatorPositions elevatorPosition) {
+        this.commandType = commandType;
+        this.elevatorPosition = elevatorPosition;
+    }
+
+    public Command(CommandType commandType) {
+        this.commandType = commandType;
+    }
+
+
 
 }

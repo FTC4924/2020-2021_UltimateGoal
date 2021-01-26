@@ -6,7 +6,7 @@ package org.firstinspires.ftc.teamcode;
 public class Constants {
 
     protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
-    protected static final float MM_Per_Inch = 25.4f;
+
     protected static final float CAMERA_FORWARD_DISPLACEMENT = 57;
     protected static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
     protected static final float CAMERA_LEFT_DISPLACEMENT = 184;
@@ -17,7 +17,11 @@ public class Constants {
     public enum CommandType {
 
         MOVE,
-        TURN
+        TURN,
+        ELEVATOR,
+        WAIT,
+        SHOOTER_REV,
+        AIM
 
     }
 
@@ -34,12 +38,12 @@ public class Constants {
 
     protected enum ElevatorPositions {
 
-        DOWN(1.0),
-        MIDDLE(0.62),
-        RING_ONE(0.595),
-        RING_TWO(0.57),
-        RING_THREE(0.55),
-        UNJAM(0.52); //Requested by Serena, added by Coach Ethan 1/19/2021
+        DOWN(.95),
+        MIDDLE(0.65),
+        RING_ONE(0.555),
+        RING_TWO(0.5425),
+        RING_THREE(0.5),
+        UNJAM(0.48); //Requested by Serena, added by Coach Ethan 1/19/2021
 
         public final double positionValue;
 

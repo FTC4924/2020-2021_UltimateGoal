@@ -289,7 +289,7 @@ public class AdvancedXDrive extends OpMode {
             rightBackPower -= Math.pow(gamepad1RightTrigger, 2);
         }
 
-        if (gamepad2.dpad_up) {
+        if (gamepad1.dpad_up) {
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
@@ -317,7 +317,7 @@ public class AdvancedXDrive extends OpMode {
                 robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
 
-                targetAngle = -1 * Math.atan((robotPosition.get(2) - 714.4) / (1828.8 + robotPosition.get(0)));
+                targetAngle = -1 * Math.atan((robotPosition.get(2) - 264.4) / 1828.8);
                 telemetry.addData("Needed Robot Angle", targetAngle);
                 robotAngleError = targetAngle - currentRobotAngle;
                 telemetry.addData("Robot Angle Error", robotAngleError);
