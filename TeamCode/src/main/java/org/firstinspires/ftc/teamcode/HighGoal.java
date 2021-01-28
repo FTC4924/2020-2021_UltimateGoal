@@ -13,14 +13,14 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
  * Created by Brendan Clark on 09/24/2020 at 12:01 PM.
  */
 
-@Autonomous(name = "AutoTest")
-public class AutoTest extends AutoBase {
+@Autonomous(name = "HighGoal")
+public class HighGoal extends AutoBase {
 
     public ArrayList<Command> getCommands() {
         return new ArrayList<>(
                 Arrays.asList(
 
-                        new Command(CommandType.MOVE, 8.0, 0, 0.6),
+                        new Command(CommandType.MOVE, 2.0, 0, 1.0),
                         new Command(CommandType.SHOOTER_REV, 0.68),
                         new Command(CommandType.AIM, 4),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_ONE),
