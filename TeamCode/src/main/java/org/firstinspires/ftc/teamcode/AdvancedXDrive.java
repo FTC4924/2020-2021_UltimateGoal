@@ -99,7 +99,7 @@ public class AdvancedXDrive extends OpMode {
 
     public void init() {
 
-        angleOffset = 0.0;
+        angleOffset = -1 * Math.PI / 2;
         currentRobotAngle = 0.0;
 
         bPressed = false;
@@ -319,7 +319,7 @@ public class AdvancedXDrive extends OpMode {
 
                 targetAngle = -1 * Math.atan((robotPosition.get(2) - 264.4) / 1828.8);
                 telemetry.addData("Needed Robot Angle", targetAngle);
-                robotAngleError = targetAngle - currentRobotAngle;
+                robotAngleError = targetAngle - angles.firstAngle;
                 telemetry.addData("Robot Angle Error", robotAngleError);
 
                 leftFrontPower += robotAngleError;

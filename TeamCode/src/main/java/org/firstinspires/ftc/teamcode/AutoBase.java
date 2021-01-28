@@ -40,6 +40,8 @@ public abstract class AutoBase extends OpMode {
     private DcMotor rightFront;
     private DcMotor rightBack;
     private Servo elevator;
+    private Servo shooterLifterLeft;
+    private Servo shooterLifterRight;
     private DcMotor shooter;
 
     private BNO055IMU imu;
@@ -97,8 +99,13 @@ public abstract class AutoBase extends OpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         elevator = hardwareMap.get(Servo.class, "elevator");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
+        shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
+        shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
 
-        elevator.setPosition(ElevatorPositions.MIDDLE.positionValue);
+        shooterLifterLeft.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
+        shooterLifterRight.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
+
+        elevator.setPosition(ElevatorPositions.DOWN.positionValue);
 
         angles = null;
         currentRobotAngle = 0.0;
@@ -175,7 +182,7 @@ public abstract class AutoBase extends OpMode {
         robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
 
         telemetry.addData("robot Angle", Math.toDegrees(currentRobotAngle));
-        telemetry.addData("error", robotAngleError);
+        telemetry.addData("target angle", targetAngle);
 
         switch (currentCommand.commandType) {
 
@@ -244,7 +251,7 @@ public abstract class AutoBase extends OpMode {
                     robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
                     telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
 
-                    targetAngle = -1 * Math.atan((robotPosition.get(2) - 264.4) / 1828.8);
+                    targetAngle = -1 * Math.atan((robotPosition.get(2) - 300) / 1828.8);
                     telemetry.addData("Needed Robot Angle", targetAngle);
                     telemetry.addData("Robot Angle Error", robotAngleError);
                 }
@@ -275,12 +282,11 @@ public abstract class AutoBase extends OpMode {
                 }
                 break;
         }
-        telemetry.addData("command",currentCommand.commandType);
 
-        leftFrontPower += robotAngleError * 2;
-        leftBackPower += robotAngleError * 2;
-        rightFrontPower += robotAngleError * 2;
-        rightBackPower += robotAngleError * 2;
+        leftFrontPower += robotAngleError * 3;
+        leftBackPower += robotAngleError * 3;
+        rightFrontPower += robotAngleError * 3;
+        rightBackPower += robotAngleError * 3;
 
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);

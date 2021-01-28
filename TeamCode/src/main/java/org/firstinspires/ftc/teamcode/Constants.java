@@ -37,13 +37,19 @@ public class Constants {
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
     protected enum ElevatorPositions {
-
-        DOWN(.95),
-        MIDDLE(0.65),
-        RING_ONE(0.555),
-        RING_TWO(0.5425),
-        RING_THREE(0.5),
-        UNJAM(0.48); //Requested by Serena, added by Coach Ethan 1/19/2021
+        // For a go-BILDA Torque servo, the values are about 0.95, 0.65, 0.555, 0.5425, 0.5, and 0.48 respectively
+        // go-BILDA servos accept PWM range of 500us-2500us with increasing PWM going clockwise
+        // This corresponds to a range in the software of 0-1
+        // Changed to a SAVOX super torque servo with a PWM range of 800-2200 and increasing PWM goes counter-clockwise
+        // This corresponds to a range in the software of 0.15-0.85, so don't try to send it outside that range
+        // So through MATH our values for SAVOX should be 0.15 for 0 degrees, 0.544 for 90 degrees, 1 for 160 degrees
+        //On 6/26/21, we configured as 0.19 = down; 0.45 middle; 0.56 ring 1; 0.60 ring 2; 0.63 ring 3; 0.68 UNJAM
+        DOWN(0.19),  // 0 degrees = 0.15, 2.2 degrees per .01
+        MIDDLE(0.45),  //45 degrees and some
+        RING_ONE(0.56),
+        RING_TWO(0.60),
+        RING_THREE(0.645),
+        UNJAM(0.68); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
 
         public final double positionValue;
 
@@ -59,7 +65,7 @@ public class Constants {
 
     protected static final double SHOOTER_LIFTER_MAX_POSITION = 0.8;
     protected static final double SHOOTER_LIFTER_MIN_POSITION = 0.2;
-    protected static final double SHOOTER_LIFTER_DEFAULT_POSITION = 0.5;
+    protected static final double SHOOTER_LIFTER_DEFAULT_POSITION = 0.3;
     protected static final double SHOOTER_LIFTER_REDUCTION = .005;
 
     protected static final double SHOOTER_POWER = .70;
