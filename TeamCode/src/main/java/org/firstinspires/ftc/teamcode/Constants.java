@@ -21,7 +21,8 @@ public class Constants {
         ELEVATOR,
         WAIT,
         SHOOTER_REV,
-        AIM
+        AIM,
+        KICKER
 
     }
 
@@ -47,7 +48,7 @@ public class Constants {
         DOWN(0.19),  // 0 degrees = 0.15, 2.2 degrees per .01
         MIDDLE(0.45),  //45 degrees and some
         RING_ONE(0.56),
-        RING_TWO(0.60),
+        RING_TWO(0.59),
         RING_THREE(0.645),
         UNJAM(0.68); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
 

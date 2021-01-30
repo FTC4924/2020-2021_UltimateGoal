@@ -42,6 +42,7 @@ public abstract class AutoBase extends OpMode {
     private Servo elevator;
     private Servo shooterLifterLeft;
     private Servo shooterLifterRight;
+    private Servo kicker;
     private DcMotor shooter;
 
     private BNO055IMU imu;
@@ -101,6 +102,7 @@ public abstract class AutoBase extends OpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
         shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
+        kicker = hardwareMap.get(Servo.class, "kicker");
 
         shooterLifterLeft.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
         shooterLifterRight.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
@@ -251,7 +253,7 @@ public abstract class AutoBase extends OpMode {
                     robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
                     telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
 
-                    targetAngle = -1 * Math.atan((robotPosition.get(2) - 300) / 1828.8);
+                    targetAngle = currentCommand.power * Math.atan((robotPosition.get(2) - currentCommand.offset) / 1828.8);
                     telemetry.addData("Needed Robot Angle", targetAngle);
                     telemetry.addData("Robot Angle Error", robotAngleError);
                 }
@@ -281,6 +283,14 @@ public abstract class AutoBase extends OpMode {
                     startNextCommand();
                 }
                 break;
+
+            case KICKER:
+                if(time < 1) {
+                    kicker.setPosition(0.4);
+                } else {
+                    kicker.setPosition(1.0);
+                    startNextCommand();
+                }
         }
 
         leftFrontPower += robotAngleError * 3;

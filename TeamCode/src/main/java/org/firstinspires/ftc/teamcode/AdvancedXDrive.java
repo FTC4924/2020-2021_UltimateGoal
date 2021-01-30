@@ -322,10 +322,10 @@ public class AdvancedXDrive extends OpMode {
                 robotAngleError = targetAngle - angles.firstAngle;
                 telemetry.addData("Robot Angle Error", robotAngleError);
 
-                leftFrontPower += robotAngleError;
-                leftBackPower += robotAngleError;
-                rightFrontPower += robotAngleError;
-                rightBackPower += robotAngleError;
+                //leftFrontPower += robotAngleError;
+                //leftBackPower += robotAngleError;
+                //rightFrontPower += robotAngleError;
+                //rightBackPower += robotAngleError;
 
                 /*distanceFromImage = Math.sqrt(Math.pow(robotPosition.get(0),2) + Math.pow(robotPosition.get(2),2));
 

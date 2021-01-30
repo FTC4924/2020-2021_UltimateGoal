@@ -11,6 +11,7 @@ public class Command {
     public double duration = 0;
     public double angle = 0;
     public double power = 0;
+    public double offset = 0;
     public ElevatorPositions elevatorPosition;
 
     public Command(CommandType commandType, double duration, double angle, double power) {
@@ -29,6 +30,13 @@ public class Command {
         this.duration = angle;
         this.power = angle;
 
+    }
+
+    public Command(CommandType commandType, double duration, double offset, int power) {
+        this.commandType = commandType;
+        this.duration = duration;
+        this.offset = offset;
+        this.power = power;
     }
 
     public Command(CommandType commandType, ElevatorPositions elevatorPosition) {
