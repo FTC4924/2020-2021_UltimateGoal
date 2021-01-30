@@ -27,8 +27,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.teamcode.Constants.*;
 
-@TeleOp(name="AdvancedXDrive")
-public class AdvancedXDrive extends OpMode {
+@TeleOp(name="RedXDrive")
+public class RedXDrive extends OpMode {
 
     private boolean bPressed;
     private boolean xPressed;
