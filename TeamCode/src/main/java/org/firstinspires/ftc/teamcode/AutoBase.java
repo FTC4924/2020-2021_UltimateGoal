@@ -52,6 +52,8 @@ public abstract class AutoBase extends OpMode {
 
     private double targetAngle;
     private double robotAngleError;
+    private int rightFrontPos;
+    private int rightBackPos;
 
     ArrayList<Command> commands;
     org.firstinspires.ftc.teamcode.Command currentCommand;
@@ -168,6 +170,8 @@ public abstract class AutoBase extends OpMode {
     }
 
     public void start() {
+        rightFrontPos = rightFront.getCurrentPosition();
+        rightBackPos = rightBack.getCurrentPosition();
         resetStartTime();
     }
 
@@ -310,6 +314,8 @@ public abstract class AutoBase extends OpMode {
         if (commandIndex < commands.size()) {
             currentCommand = commands.get(commandIndex);
             angleSet = false;
+            rightFrontPos = rightFront.getCurrentPosition();
+            rightBackPos = rightBack.getCurrentPosition();
             resetStartTime();
 
         }

@@ -5,7 +5,11 @@ package org.firstinspires.ftc.teamcode;
  */
 public class Constants {
 
-    protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASeXGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXDVNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGnQ0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
+    protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASe" +
+            "XGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXD" +
+            "VNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGn" +
+            "Q0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O" +
+            "1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
 
     protected static final float CAMERA_FORWARD_DISPLACEMENT = 57;
     protected static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
@@ -38,13 +42,14 @@ public class Constants {
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
     protected enum ElevatorPositions {
-        // For a go-BILDA Torque servo, the values are about 0.95, 0.65, 0.555, 0.5425, 0.5, and 0.48 respectively
-        // go-BILDA servos accept PWM range of 500us-2500us with increasing PWM going clockwise
-        // This corresponds to a range in the software of 0-1
-        // Changed to a SAVOX super torque servo with a PWM range of 800-2200 and increasing PWM goes counter-clockwise
-        // This corresponds to a range in the software of 0.15-0.85, so don't try to send it outside that range
-        // So through MATH our values for SAVOX should be 0.15 for 0 degrees, 0.544 for 90 degrees, 1 for 160 degrees
-        //On 6/26/21, we configured as 0.19 = down; 0.45 middle; 0.56 ring 1; 0.60 ring 2; 0.63 ring 3; 0.68 UNJAM
+        /* For a go-BILDA Torque servo, the values are about 0.95, 0.65, 0.555, 0.5425, 0.5, and 0.48 respectively
+        go-BILDA servos accept PWM range of 500us-2500us with increasing PWM going clockwise
+        This corresponds to a range in the software of 0-1
+        Changed to a SAVOX super torque servo with a PWM range of 800-2200 and increasing PWM goes counter-clockwise
+        This corresponds to a range in the software of 0.15-0.85, so don't try to send it outside that range
+        So through MATH our values for SAVOX should be 0.15 for 0 degrees, 0.544 for 90 degrees, 1 for 160 degrees
+        On 6/26/21, we configured as 0.19 = down; 0.45 middle; 0.56 ring 1; 0.60 ring 2; 0.63 ring 3; 0.68 UNJAM
+        */
         DOWN(0.19),  // 0 degrees = 0.15, 2.2 degrees per .01
         MIDDLE(0.45),  //45 degrees and some
         RING_ONE(0.56),
@@ -70,5 +75,7 @@ public class Constants {
     protected static final double SHOOTER_LIFTER_REDUCTION = .005;
 
     protected static final double SHOOTER_POWER = .70;
+
+    protected static final double TICKS_PER_FOOT = 379.56;
 
 }

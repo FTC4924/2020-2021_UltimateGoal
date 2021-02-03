@@ -9,6 +9,7 @@ public class Command {
 
     public CommandType commandType;
     public double duration = 0;
+    public double distance = 0;
     public double angle = 0;
     public double power = 0;
     public double offset = 0;
@@ -20,6 +21,7 @@ public class Command {
         this.duration = duration;
         this.angle = Math.toRadians(angle) ;
         this.power = power;
+        this.distance = angle;
 
     }
 
