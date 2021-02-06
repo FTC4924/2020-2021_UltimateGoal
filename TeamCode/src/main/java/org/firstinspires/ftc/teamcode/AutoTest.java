@@ -14,25 +14,28 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
  */
 
 @Autonomous(name = "AutoTest")
-public class AutoTest extends AutoBase {
+public class AutoTest extends AutoBaseEncoder {
 
     public ArrayList<Command> getCommands() {
         return new ArrayList<>(
                 Arrays.asList(
 
-                        new Command(CommandType.MOVE, 8.0, 0, 0.6),
-                        new Command(CommandType.SHOOTER_REV, 0.68),
-                        new Command(CommandType.AIM, 4),
-                        new Command(CommandType.ELEVATOR, ElevatorPositions.RING_ONE),
-                        new Command(CommandType.WAIT, 2),
-                        new Command(CommandType.ELEVATOR, ElevatorPositions.RING_TWO),
-                        new Command(CommandType.WAIT, 2),
-                        new Command(CommandType.ELEVATOR, ElevatorPositions.RING_THREE),
-                        new Command(CommandType.WAIT, 5),
-                        new Command(CommandType.SHOOTER_REV, 0.0),
-                        new Command(CommandType.ELEVATOR, ElevatorPositions.DOWN),
-                        new Command(CommandType.MOVE, 0.4, 0, 1.0),
-                        new Command(CommandType.TURN)
+                        new Command(CommandType.MOVE, 1, 0, 0.6),
+                        new Command(CommandType.TURN, 45),
+                        new Command(CommandType.MOVE, 1, 45, 0.6),
+                        new Command(CommandType.TURN, 90),
+                        new Command(CommandType.MOVE, 1, 90, 0.6),
+                        new Command(CommandType.TURN, 135),
+                        new Command(CommandType.MOVE, 1, 135, 0.6),
+                        new Command(CommandType.TURN, 180),
+                        new Command(CommandType.MOVE, 1, 180, 0.6),
+                        new Command(CommandType.TURN, -135),
+                        new Command(CommandType.MOVE, 1, -135, 0.6),
+                        new Command(CommandType.TURN, -90),
+                        new Command(CommandType.MOVE, 1, -90, 0.6),
+                        new Command(CommandType.TURN, -45),
+                        new Command(CommandType.MOVE, 1, -45, 0.6),
+                        new Command(CommandType.TURN, 0)
 
                 )
         );

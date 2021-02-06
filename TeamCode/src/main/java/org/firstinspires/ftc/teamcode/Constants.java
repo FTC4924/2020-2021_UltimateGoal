@@ -41,7 +41,7 @@ public class Constants {
 
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
-    protected enum ElevatorPositions {
+    protected enum ElevatorPositions { //TODO Re-adjust the values for the new elevator.
         /* For a go-BILDA Torque servo, the values are about 0.95, 0.65, 0.555, 0.5425, 0.5, and 0.48 respectively
         go-BILDA servos accept PWM range of 500us-2500us with increasing PWM going clockwise
         This corresponds to a range in the software of 0-1
@@ -76,6 +76,7 @@ public class Constants {
 
     protected static final double SHOOTER_POWER = .70;
 
-    protected static final double TICKS_PER_FOOT = 379.56;
+    protected static final double TICKS_PER_FOOT = 759.12;
+    protected static final double ENCODER_TOLERANCE = 20.0;
 
 }

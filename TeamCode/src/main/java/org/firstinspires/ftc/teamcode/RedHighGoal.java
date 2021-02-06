@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 /**
  * Created by Brendan Clark on 09/24/2020 at 12:01 PM.
  */
-
+@Disabled
 @Autonomous(name = "RedHighGoal")
 public class RedHighGoal extends AutoBase {
 

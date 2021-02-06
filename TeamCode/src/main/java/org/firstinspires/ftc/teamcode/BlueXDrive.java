@@ -62,7 +62,7 @@ public class BlueXDrive extends OpMode {
     private Servo funnelRight;
     private Servo shooterLifterLeft;
     private Servo shooterLifterRight;
-    //private Servo conveyor;
+    private Servo conveyor;
 
 
     //Creating the variables for the gyro sensor
@@ -123,7 +123,7 @@ public class BlueXDrive extends OpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
         bristles = hardwareMap.get(DcMotor.class, "collection");
-        //conveyor = hardwareMap.get(Servo.class, "conveyor"); Not needed for first competition!
+        conveyor = hardwareMap.get(Servo.class, "conveyor");
         elevator = hardwareMap.get(Servo.class, "elevator");
         kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
@@ -432,13 +432,13 @@ public class BlueXDrive extends OpMode {
             } else {
                 bristles.setPower(BRISTLES_DEFAULT_POWER);
             }
-            //conveyor.setPosition(0.0); Not needed for first competition!
+            conveyor.setPosition(1.0);
         } else if (bristlesOut) {
             bristles.setPower(BRISTLES_DEFAULT_POWER * -1);
-            //conveyor.setPosition(1.0); Not needed for first competition!
+            conveyor.setPosition(0.0);
         } else {
             bristles.setPower(0.0);
-            //conveyor.setPosition(0.5); Not needed for first competition!
+            conveyor.setPosition(0.5);
         }
 
     }

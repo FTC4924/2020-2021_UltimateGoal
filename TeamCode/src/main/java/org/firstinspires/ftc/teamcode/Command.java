@@ -21,7 +21,7 @@ public class Command {
         this.duration = duration;
         this.angle = Math.toRadians(angle) ;
         this.power = power;
-        this.distance = angle;
+        this.distance = duration;
 
     }
 
