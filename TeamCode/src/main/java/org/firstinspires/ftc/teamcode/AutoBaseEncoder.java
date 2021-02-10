@@ -58,6 +58,11 @@ public abstract class AutoBaseEncoder extends OpMode {
     private double rightFrontTargetPosition;
     private double rightBackTargetPosition;
 
+    double leftFrontPower = 0;
+    double leftBackPower = 0;
+    double rightFrontPower = 0;
+    double rightBackPower = 0;
+
     private BNO055IMU imu;
     private Orientation angles;
 
@@ -88,6 +93,7 @@ public abstract class AutoBaseEncoder extends OpMode {
     private List<VuforiaTrackable> allTrackables;
 
     private boolean targetVisible;
+    private boolean targetVisible2;
 
     private double highest = 0;
     private double lowest = 20000000;
@@ -119,11 +125,11 @@ public abstract class AutoBaseEncoder extends OpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         
         elevator = hardwareMap.get(Servo.class, "elevator");
-        elevator.setPosition(ElevatorPositions.DOWN.positionValue);
+        elevator.setPosition(ElevatorPositions.MIDDLE.positionValue);
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
-        shooterLifterLeft.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
+        shooterLifterLeft.setPosition(.35);
         shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
-        shooterLifterRight.setPosition(SHOOTER_LIFTER_DEFAULT_POSITION);
+        shooterLifterRight.setPosition(.35);
         kicker = hardwareMap.get(Servo.class, "kicker");
 
         targetPosition = 0.0;
@@ -193,6 +199,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         targetsUltimateGoal.activate();
 
         targetVisible = false;
+        targetVisible2 = targetVisible;
 
     }
 
@@ -202,17 +209,16 @@ public abstract class AutoBaseEncoder extends OpMode {
 
     public void loop() {
 
-        telemetry.addData("Command", currentCommand.commandType);
+        leftFrontPower = 0;
+        leftBackPower = 0;
+        rightFrontPower = 0;
+        rightBackPower = 0;
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
         currentRobotAngle = angles.firstAngle;
 
         robotAngleError = targetAngle - currentRobotAngle;
         robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
-
-        telemetry.addData("Robot Angle", Math.toDegrees(currentRobotAngle));
-        telemetry.addData("Target angle", targetAngle);
-        telemetry.addData("Robot Angle Error", robotAngleError * 30);
 
         switch (currentCommand.commandType) {
 
@@ -250,20 +256,24 @@ public abstract class AutoBaseEncoder extends OpMode {
         rightFrontTargetPosition += robotAngleError * 20;
         rightBackTargetPosition += robotAngleError * 20;
 
-        telemetry.addData("leftFrontTarget", leftFrontTargetPosition);
-        telemetry.addData("leftBackTarget", leftBackTargetPosition);
-        telemetry.addData("rightFrontTarget", rightFrontTargetPosition);
-        telemetry.addData("rightBackTarget", rightBackTargetPosition);
+        leftFrontPower += robotAngleError * 3;
+        leftBackPower += robotAngleError * 3;
+        rightFrontPower += robotAngleError * 3;
+        rightBackPower += robotAngleError * 3;
 
-        telemetry.addData("Vuforia Highest:", highest);
-        telemetry.addData("Vuforia Lowest:",lowest);
+        // Adjusts motor speed.
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
 
         leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
         leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
         rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
         rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
 
-        telemetry.addData("Move Exit:", Math.abs(rightBack.getCurrentPosition() - rightBackTargetPosition));
+        telemetry.addData("targetVisible", targetVisible2);
+
     }
 
     /**
@@ -274,6 +284,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         plus the current robot angle so that the controls are independent of what direction the
         robot is facing*/
         if (onFirstLoop) {
+
             targetPosition = currentCommand.distance * TICKS_PER_FOOT;
 
             double leftTargetPositionCalculation = targetPosition * Math.cos(currentCommand.angle + (Math.PI / 4) - currentRobotAngle);
@@ -284,14 +295,22 @@ public abstract class AutoBaseEncoder extends OpMode {
             rightFrontTargetPosition += (rightTargetPositionCalculation);
             rightBackTargetPosition += (leftTargetPositionCalculation);
 
-            // Adjusts motor speed.
-            leftFront.setPower(currentCommand.power);
-            leftBack.setPower(currentCommand.power);
-            rightFront.setPower(currentCommand.power);
-            rightBack.setPower(currentCommand.power);
-
             onFirstLoop = false;
         }
+
+        /*Determines what power each wheel should get based on the angle we get from the stick
+                    plus the current robot angle so that the controls are independent of what direction the
+                    robot is facing*/
+        leftFrontPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
+        leftBackPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
+        rightFrontPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
+        rightBackPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
+
+        // Adjusts motor speed.
+        leftFrontPower *= currentCommand.power;
+        leftBackPower *= currentCommand.power;
+        rightFrontPower *= currentCommand.power;
+        rightBackPower *= currentCommand.power;
 
         if (Math.abs(leftFront.getCurrentPosition() - leftFrontTargetPosition) <= ENCODER_TOLERANCE &&
                 Math.abs(leftBack.getCurrentPosition() - leftBackTargetPosition) <= ENCODER_TOLERANCE &&
@@ -322,12 +341,16 @@ public abstract class AutoBaseEncoder extends OpMode {
      */
     public void aim() { //TODO Clean the camera lenses and make sure they are in focus.
         if(onFirstLoop) {
-            for (int i = 0; i < 100; i++) { //TODO Tweak the number of times this loops for optimum efficiency
+
+            targetVisible2 = false;
+
+            for (int i = 0; i < 20; i++) { //TODO Tweak the number of times this loops for optimum efficiency
                 targetVisible = false;
 
                 for (VuforiaTrackable trackable : allTrackables) {
                     if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                         targetVisible = true;
+                        targetVisible2 = targetVisible;
 
                         OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                         if (robotLocationTransform != null) {
@@ -350,7 +373,7 @@ public abstract class AutoBaseEncoder extends OpMode {
                 }
             }
             onFirstLoop = false;
-            targetAngle /= 100;
+            targetAngle /= 20;
             robotAngleError = targetAngle - currentRobotAngle;
         }
         if(Math.abs(robotAngleError) < TOLERANCE) {
@@ -388,7 +411,7 @@ public abstract class AutoBaseEncoder extends OpMode {
      */
     public void kicker() {
         if(time < 1) {
-            kicker.setPosition(0.4);
+            kicker.setPosition(0.8);
         } else {
             kicker.setPosition(1.0);
             startNextCommand();

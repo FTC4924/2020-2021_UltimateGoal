@@ -20,22 +20,7 @@ public class AutoTest extends AutoBaseEncoder {
         return new ArrayList<>(
                 Arrays.asList(
 
-                        new Command(CommandType.MOVE, 1, 0, 0.6),
-                        new Command(CommandType.TURN, 45),
-                        new Command(CommandType.MOVE, 1, 45, 0.6),
-                        new Command(CommandType.TURN, 90),
-                        new Command(CommandType.MOVE, 1, 90, 0.6),
-                        new Command(CommandType.TURN, 135),
-                        new Command(CommandType.MOVE, 1, 135, 0.6),
-                        new Command(CommandType.TURN, 180),
-                        new Command(CommandType.MOVE, 1, 180, 0.6),
-                        new Command(CommandType.TURN, -135),
-                        new Command(CommandType.MOVE, 1, -135, 0.6),
-                        new Command(CommandType.TURN, -90),
-                        new Command(CommandType.MOVE, 1, -90, 0.6),
-                        new Command(CommandType.TURN, -45),
-                        new Command(CommandType.MOVE, 1, -45, 0.6),
-                        new Command(CommandType.TURN, 0)
+                        new Command(CommandType.MOVE, 10, 0, 0.4)
 
                 )
         );
