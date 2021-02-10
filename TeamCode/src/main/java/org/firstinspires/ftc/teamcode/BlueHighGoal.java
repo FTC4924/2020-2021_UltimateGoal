@@ -23,7 +23,7 @@ public class BlueHighGoal extends AutoBase {
                         new Command(CommandType.WAIT, 5),
                         new Command(CommandType.MOVE, 2.05, 0.0, 1.0),
                         new Command(CommandType.SHOOTER_REV, 0.68),
-                        new Command(CommandType.AIM, 4.0, 914, 1),
+                        new Command(CommandType.DETECT_IMAGE, 4.0, 914, 1),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_ONE),
                         new Command(CommandType.WAIT, 2.0),
                         new Command(CommandType.KICKER),

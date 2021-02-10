@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.RADIANS;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.teamcode.Constants.*;
@@ -40,17 +38,13 @@ public abstract class AutoBaseEncoder extends OpMode {
     private ArrayList<Command> commands;
     private Command currentCommand;
     private int commandIndex;
+    private boolean commandFirstLoop;
+    private int count;
 
     private DcMotor leftFront;
     private DcMotor leftBack;
     private DcMotor rightFront;
     private DcMotor rightBack;
-    private DcMotor shooter;
-
-    private Servo elevator;
-    private Servo shooterLifterLeft;
-    private Servo shooterLifterRight;
-    private Servo kicker;
 
     private double targetPosition;
     private double leftFrontTargetPosition;
@@ -58,10 +52,18 @@ public abstract class AutoBaseEncoder extends OpMode {
     private double rightFrontTargetPosition;
     private double rightBackTargetPosition;
 
-    double leftFrontPower = 0;
-    double leftBackPower = 0;
-    double rightFrontPower = 0;
-    double rightBackPower = 0;
+    double leftFrontPower;
+    double leftBackPower;
+    double rightFrontPower;
+    double rightBackPower;
+
+    private DcMotor shooter;
+    private Servo elevator;
+    private Servo shooterLifterLeft;
+    private Servo shooterLifterRight;
+    private Servo kicker;
+
+    private boolean shooterReved;
 
     private BNO055IMU imu;
     private Orientation angles;
@@ -69,13 +71,9 @@ public abstract class AutoBaseEncoder extends OpMode {
     private double currentRobotAngle;
     private double targetAngle;
     private double robotAngleError;
-    private boolean onFirstLoop;
 
     private OpenGLMatrix robotFromCamera;
-    private OpenGLMatrix robotLocationTransform;
     private OpenGLMatrix lastLocation;
-    private VectorF robotPosition;
-    private Orientation robotRotation;
 
     private WebcamName webcam1;
     private int cameraMonitorViewId;
@@ -83,26 +81,18 @@ public abstract class AutoBaseEncoder extends OpMode {
     private VuforiaLocalizer vuforia;
 
     private VuforiaTrackables targetsUltimateGoal;
-
-    private VuforiaTrackable blueTowerGoalTarget;
-    private VuforiaTrackable redTowerGoalTarget;
-    private VuforiaTrackable redAllianceTarget;
-    private VuforiaTrackable blueAllianceTarget;
-    private VuforiaTrackable frontWallTarget;
-
     private List<VuforiaTrackable> allTrackables;
 
     private boolean targetVisible;
-    private boolean targetVisible2;
-
-    private double highest = 0;
-    private double lowest = 20000000;
+    private double distanceFromTarget;
 
     public void init() {
 
         commands = getCommands();
-        currentCommand = commands.get(0);
         commandIndex = 0;
+        currentCommand = commands.get(0);
+        commandFirstLoop = true;
+        count = 0;
 
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -122,8 +112,19 @@ public abstract class AutoBaseEncoder extends OpMode {
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setTargetPosition(0);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        targetPosition = 0.0;
+        leftFrontTargetPosition = 0.0;
+        leftBackTargetPosition = 0.0;
+        rightFrontTargetPosition = 0.0;
+        rightBackTargetPosition = 0.0;
+
+        leftFrontPower = 0;
+        leftBackPower = 0;
+        rightFrontPower = 0;
+        rightBackPower = 0;
+
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-        
         elevator = hardwareMap.get(Servo.class, "elevator");
         elevator.setPosition(ElevatorPositions.MIDDLE.positionValue);
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
@@ -132,11 +133,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         shooterLifterRight.setPosition(.35);
         kicker = hardwareMap.get(Servo.class, "kicker");
 
-        targetPosition = 0.0;
-        leftFrontTargetPosition = 0.0;
-        leftBackTargetPosition = 0.0;
-        rightFrontTargetPosition = 0.0;
-        rightBackTargetPosition = 0.0;
+        shooterReved = false;
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
@@ -150,15 +147,11 @@ public abstract class AutoBaseEncoder extends OpMode {
         currentRobotAngle = 0.0;
         targetAngle = 0.0;
         robotAngleError = 0.0;
-        onFirstLoop = true;
 
         robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
-        robotLocationTransform = null;
         lastLocation = null;
-        robotPosition = null;
-        robotRotation = null;
 
         webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -169,37 +162,17 @@ public abstract class AutoBaseEncoder extends OpMode {
         vuforia = ClassFactory.getInstance().createVuforia(vuforiaParameters);
 
         targetsUltimateGoal = this.vuforia.loadTrackablesFromAsset("UltimateGoal");
-
-        VuforiaTrackable blueTowerGoalTarget = targetsUltimateGoal.get(0);
-        blueTowerGoalTarget.setName("Blue Tower Goal Target");
-        VuforiaTrackable redTowerGoalTarget = targetsUltimateGoal.get(1);
-        redTowerGoalTarget.setName("Red Tower Goal Target");
-        VuforiaTrackable redAllianceTarget = targetsUltimateGoal.get(2);
-        redAllianceTarget.setName("Red Alliance Target");
-        VuforiaTrackable blueAllianceTarget = targetsUltimateGoal.get(3);
-        blueAllianceTarget.setName("Blue Alliance Target");
-        VuforiaTrackable frontWallTarget = targetsUltimateGoal.get(4);
-        frontWallTarget.setName("Front Wall Target");
-
-        blueTowerGoalTarget.setLocation(OpenGLMatrix
-                .translation(0, 0, 0)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0 , 0)));
-
-        redTowerGoalTarget.setLocation(OpenGLMatrix
-                .translation(0, 0, 0)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0, 0)));
-
-        allTrackables = new ArrayList<VuforiaTrackable>();
+        allTrackables = new ArrayList<>();
         allTrackables.addAll(targetsUltimateGoal);
 
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters.cameraDirection);
         }
 
-        targetsUltimateGoal.activate();
-
         targetVisible = false;
-        targetVisible2 = targetVisible;
+        distanceFromTarget = 0.0;
+
+        targetsUltimateGoal.activate();
 
     }
 
@@ -216,7 +189,6 @@ public abstract class AutoBaseEncoder extends OpMode {
 
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
         currentRobotAngle = angles.firstAngle;
-
         robotAngleError = targetAngle - currentRobotAngle;
         robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
 
@@ -230,8 +202,8 @@ public abstract class AutoBaseEncoder extends OpMode {
                 turn();
                 break;
 
-            case AIM:
-                aim();
+            case DETECT_IMAGE:
+                detectImage();
                 break;
 
             case ELEVATOR:
@@ -239,7 +211,7 @@ public abstract class AutoBaseEncoder extends OpMode {
                 break;
 
             case SHOOTER_REV:
-                shooterRev();
+                revShooter();
                 break;
 
             case WAIT:
@@ -256,6 +228,11 @@ public abstract class AutoBaseEncoder extends OpMode {
         rightFrontTargetPosition += robotAngleError * 20;
         rightBackTargetPosition += robotAngleError * 20;
 
+        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
+        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
+        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
+        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
+
         leftFrontPower += robotAngleError * 3;
         leftBackPower += robotAngleError * 3;
         rightFrontPower += robotAngleError * 3;
@@ -267,12 +244,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
-        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
-        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
-        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
-        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
-
-        telemetry.addData("targetVisible", targetVisible2);
+        telemetry.addData("targetVisible", targetVisible);
 
     }
 
@@ -283,7 +255,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         /*Determines what encoder position each wheel should be based on the angle we get from the input
         plus the current robot angle so that the controls are independent of what direction the
         robot is facing*/
-        if (onFirstLoop) {
+        if (commandFirstLoop) {
 
             targetPosition = currentCommand.distance * TICKS_PER_FOOT;
 
@@ -295,7 +267,7 @@ public abstract class AutoBaseEncoder extends OpMode {
             rightFrontTargetPosition += (rightTargetPositionCalculation);
             rightBackTargetPosition += (leftTargetPositionCalculation);
 
-            onFirstLoop = false;
+            commandFirstLoop = false;
         }
 
         /*Determines what power each wheel should get based on the angle we get from the stick
@@ -324,9 +296,9 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Turns using the encoder positions.
       */
-    public void turn() {
-        if(onFirstLoop) {
-            onFirstLoop = false;
+    private void turn() {
+        if(commandFirstLoop) {
+            commandFirstLoop = false;
             targetAngle = currentCommand.angle;
             robotAngleError = targetAngle - currentRobotAngle;
             robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
@@ -339,44 +311,22 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Aims the robot at the target using a navigation image.
      */
-    public void aim() { //TODO Clean the camera lenses and make sure they are in focus.
-        if(onFirstLoop) {
-
-            targetVisible2 = false;
-
-            for (int i = 0; i < 20; i++) { //TODO Tweak the number of times this loops for optimum efficiency
-                targetVisible = false;
-
-                for (VuforiaTrackable trackable : allTrackables) {
-                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                        targetVisible = true;
-                        targetVisible2 = targetVisible;
-
-                        OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                        if (robotLocationTransform != null) {
-                            lastLocation = robotLocationTransform;
-                        }
-
-                        break;
-                    }
-                }
-                if (targetVisible) {
-                    robotPosition = lastLocation.getTranslation();
-                    robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
-                    targetAngle += currentCommand.power * Math.atan((robotPosition.get(2) - currentCommand.offset) / 1828.8);
-                    if (robotPosition.get(2) > highest) {
-                        highest = robotPosition.get(2);
-                    }
-                    if (robotPosition.get(2) < lowest) {
-                        lowest = robotPosition.get(2);
-                    }
+    private void detectImage() { //TODO Clean the camera lenses and make sure they are in focus.
+        if(count < 20) {
+            targetVisible = false;
+            for (VuforiaTrackable trackable : allTrackables) {
+                if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                    targetVisible = true;
+                    lastLocation = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    break;
                 }
             }
-            onFirstLoop = false;
-            targetAngle /= 20;
-            robotAngleError = targetAngle - currentRobotAngle;
-        }
-        if(Math.abs(robotAngleError) < TOLERANCE) {
+            if (targetVisible) {
+                distanceFromTarget += (lastLocation.getTranslation().get(2));
+            }
+            count ++;
+        } else {
+            distanceFromTarget /= 20;
             startNextCommand();
         }
     }
@@ -384,23 +334,30 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Changes the elevator position.
      */
-    public void elevator() {
+    private void elevator() {
         elevator.setPosition(currentCommand.elevatorPosition.positionValue);
-        startNextCommand();
+        if(Math.abs(elevator.getPosition() - currentCommand.elevatorPosition.positionValue) < TOLERANCE) {
+            startNextCommand();
+        }
     }
 
     /**
      * Toggles the shooter motor wheel.
      */
-    public void shooterRev() {
-        shooter.setPower(currentCommand.power * -1);
+    private void revShooter() {
+        shooterReved = !shooterReved;
+        if(shooterReved) {
+            shooter.setPower(SHOOTER_POWER * -1);
+        } else {
+            shooter.setPower(0.0);
+        }
         startNextCommand();
     }
 
     /**
-     * Waits for a time. Could not use wait() because it is a final used elsewhere.
+     * Waits for a time. Could not use wait() because it is used in the base Java language.
      */
-    public void pause() {
+    private void pause() {
         if(time > currentCommand.duration) {
             startNextCommand();
         }
@@ -409,10 +366,9 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Triggers the kicker servo.
      */
-    public void kicker() {
-        if(time < 1) {
-            kicker.setPosition(0.8);
-        } else {
+    private void kicker() {
+        kicker.setPosition(0.8);
+        if (Math.abs(kicker.getPosition() - 0.8) < TOLERANCE) {
             kicker.setPosition(1.0);
             startNextCommand();
         }
@@ -421,16 +377,19 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Starts the next command in the sequence.
      */
-    public void startNextCommand() {
+    private void startNextCommand() {
         commandIndex ++;
         if (commandIndex < commands.size()) {
             currentCommand = commands.get(commandIndex);
-            onFirstLoop = true;
+            commandFirstLoop = true;
             resetStartTime();
-
         }
     }
 
-    public abstract ArrayList<Command> getCommands();
+    protected double getAimAngle(double targetX, int direction) {
+        return direction * Math.atan((distanceFromTarget - targetX) / 1828.8);
+    }
+
+    protected abstract ArrayList<Command> getCommands();
 
 }

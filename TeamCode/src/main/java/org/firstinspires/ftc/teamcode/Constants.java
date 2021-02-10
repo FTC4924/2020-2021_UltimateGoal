@@ -25,7 +25,7 @@ public class Constants {
         ELEVATOR,
         WAIT,
         SHOOTER_REV,
-        AIM,
+        DETECT_IMAGE,
         KICKER
 
     }

@@ -228,50 +228,6 @@ public abstract class AutoBase extends OpMode {
                 }
                 break;
 
-            case AIM:
-                targetVisible = false;
-
-                for (VuforiaTrackable trackable : allTrackables) {
-                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                        //telemetry.addData("Visible Target", trackable.getName());
-                        targetVisible = true;
-
-                        OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                        if (robotLocationTransform != null) {
-
-                            lastLocation = robotLocationTransform;
-
-                        }
-
-                        break;
-
-                    }
-                }
-
-                if (targetVisible) {
-                    robotPosition = lastLocation.getTranslation();
-                    telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                            robotPosition.get(0), robotPosition.get(1), robotPosition.get(2));
-                    telemetry.addData("TargetAngle", Math.toDegrees(targetAngle));
-
-                    robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
-                    telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
-
-                    targetAngle = currentCommand.power * Math.atan((robotPosition.get(2) - currentCommand.offset) / 1828.8);
-                    telemetry.addData("Needed Robot Angle", targetAngle);
-                    telemetry.addData("Robot Angle Error", robotAngleError);
-                }
-
-                if(!angleSet) {
-                    angleSet = true;
-                    robotAngleError = targetAngle - currentRobotAngle;
-                }
-
-                if(time > currentCommand.duration) {
-                    startNextCommand();
-                }
-                break;
-
             case ELEVATOR:
                 elevator.setPosition(currentCommand.elevatorPosition.positionValue);
                 startNextCommand();
