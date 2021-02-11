@@ -37,7 +37,7 @@ public class Command {
     }
 
     public Command(CommandType commandType, double duration) {
-
+        this.duration = duration;
     }
 
     public Command(CommandType commandType, ElevatorPositions elevatorPosition) {
