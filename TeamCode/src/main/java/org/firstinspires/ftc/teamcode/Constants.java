@@ -18,7 +18,18 @@ public class Constants {
     protected static final float CAMERA_Y_ROTATE = 0;
     protected static final float CAMERA_Z_ROTATE = 0;
 
-    public enum CommandType {
+    protected enum allianceColor {
+
+        BLUE(1),
+        RED(-1);
+
+        protected final int direction;
+
+        allianceColor(int direction) { this.direction = direction; }
+
+    }
+
+    protected enum CommandType {
 
         MOVE,
         TURN,
@@ -57,13 +68,9 @@ public class Constants {
         RING_THREE(0.58),
         UNJAM(0.6); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
 
-        public final double positionValue;
+        protected final double positionValue;
 
-        ElevatorPositions(double positionValue) {
-
-            this.positionValue = positionValue;
-
-        }
+        ElevatorPositions(double positionValue) { this.positionValue = positionValue; }
 
     }
 

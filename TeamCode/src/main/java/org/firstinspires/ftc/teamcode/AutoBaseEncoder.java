@@ -84,7 +84,7 @@ public abstract class AutoBaseEncoder extends OpMode {
     private List<VuforiaTrackable> allTrackables;
 
     private boolean targetVisible;
-    private double distanceFromTarget;
+    private double distanceFromImage;
 
     public void init() {
 
@@ -128,9 +128,9 @@ public abstract class AutoBaseEncoder extends OpMode {
         elevator = hardwareMap.get(Servo.class, "elevator");
         elevator.setPosition(ElevatorPositions.MIDDLE.positionValue);
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
-        shooterLifterLeft.setPosition(.35);
+        shooterLifterLeft.setPosition(.20);
         shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
-        shooterLifterRight.setPosition(.35);
+        shooterLifterRight.setPosition(.20);
         kicker = hardwareMap.get(Servo.class, "kicker");
 
         shooterReved = false;
@@ -170,7 +170,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         }
 
         targetVisible = false;
-        distanceFromTarget = 0.0;
+        distanceFromImage = 0.0;
 
         targetsUltimateGoal.activate();
 
@@ -181,6 +181,9 @@ public abstract class AutoBaseEncoder extends OpMode {
     }
 
     public void loop() {
+        telemetry.addData("commandType", currentCommand.commandType);
+        telemetry.addData("targetAngle", Math.toDegrees(targetAngle));
+        telemetry.addData("distanceFromImage", distanceFromImage);
 
         leftFrontPower = 0;
         leftBackPower = 0;
@@ -311,22 +314,25 @@ public abstract class AutoBaseEncoder extends OpMode {
     /**
      * Aims the robot at the target using a navigation image.
      */
-    private void detectImage() { //TODO Clean the camera lenses and make sure they are in focus.
+    private void detectImage() {
         if(count < 20) {
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                     targetVisible = true;
-                    lastLocation = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    if (robotLocationTransform != null) {
+                        lastLocation = robotLocationTransform;
+                    }
                     break;
                 }
             }
             if (targetVisible) {
-                distanceFromTarget += (lastLocation.getTranslation().get(2));
+                distanceFromImage += (lastLocation.getTranslation().get(2));
             }
             count ++;
         } else {
-            distanceFromTarget /= 20;
+            distanceFromImage /= 20;
             startNextCommand();
         }
     }
@@ -335,8 +341,9 @@ public abstract class AutoBaseEncoder extends OpMode {
      * Changes the elevator position.
      */
     private void elevator() {
-        elevator.setPosition(currentCommand.elevatorPosition.positionValue);
-        if(Math.abs(elevator.getPosition() - currentCommand.elevatorPosition.positionValue) < TOLERANCE) {
+        if(time < 2) {
+            elevator.setPosition(currentCommand.elevatorPosition.positionValue);
+        } else {
             startNextCommand();
         }
     }
@@ -347,7 +354,7 @@ public abstract class AutoBaseEncoder extends OpMode {
     private void revShooter() {
         shooterReved = !shooterReved;
         if(shooterReved) {
-            shooter.setPower(SHOOTER_POWER * -1);
+            shooter.setPower(.68 * -1);
         } else {
             shooter.setPower(0.0);
         }
@@ -367,11 +374,16 @@ public abstract class AutoBaseEncoder extends OpMode {
      * Triggers the kicker servo.
      */
     private void kicker() {
-        kicker.setPosition(0.8);
-        if (Math.abs(kicker.getPosition() - 0.8) < TOLERANCE) {
+        if(time < 1) {
+            kicker.setPosition(0.8);
+        } else {
             kicker.setPosition(1.0);
             startNextCommand();
         }
+    }
+
+    protected double getAimAngle(allianceColor allianceColor, double targetX) {
+        return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
     }
 
     /**
@@ -384,10 +396,6 @@ public abstract class AutoBaseEncoder extends OpMode {
             commandFirstLoop = true;
             resetStartTime();
         }
-    }
-
-    protected double getAimAngle(double targetX, int direction) {
-        return direction * Math.atan((distanceFromTarget - targetX) / 1828.8);
     }
 
     protected abstract ArrayList<Command> getCommands();

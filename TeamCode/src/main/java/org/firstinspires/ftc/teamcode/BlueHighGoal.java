@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.DcMotor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,35 +15,30 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
  */
 
 @Autonomous(name = "BlueHighGoal")
-public class BlueHighGoal extends AutoBase {
-
-    public ArrayList<Command> getCommands() {
+public class BlueHighGoal extends AutoBaseEncoder {
+    protected ArrayList<Command> getCommands() {
         return new ArrayList<>(
                 Arrays.asList(
 
-                        new Command(CommandType.WAIT, 5),
-                        new Command(CommandType.MOVE, 2.05, 0.0, 1.0),
-                        new Command(CommandType.SHOOTER_REV, 0.68),
-                        new Command(CommandType.DETECT_IMAGE, 4.0, 914, 1),
+                        new Command(CommandType.MOVE, 5.7, 0.0, .8),
+                        new Command(CommandType.SHOOTER_REV),
+                        new Command(CommandType.DETECT_IMAGE), //TODO Finish the autonomous code using the encoders and duplicate for the blue side.
+                        new Command(CommandType.TURN, AngleUnit.RADIANS, getAimAngle(allianceColor.BLUE, 1275.0)),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_ONE),
-                        new Command(CommandType.WAIT, 2.0),
                         new Command(CommandType.KICKER),
-                        new Command(CommandType.WAIT, 1.0),
+                        new Command(CommandType.TURN, AngleUnit.RADIANS, getAimAngle(allianceColor.BLUE, 1470.0)),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_TWO),
-                        new Command(CommandType.WAIT, 2.0),
                         new Command(CommandType.KICKER),
-                        new Command(CommandType.WAIT, 1.0),
+                        new Command(CommandType.TURN, AngleUnit.RADIANS, getAimAngle(allianceColor.BLUE, 1685.0)),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_THREE),
-                        new Command(CommandType.WAIT, 2.0),
                         new Command(CommandType.KICKER),
-                        new Command(CommandType.WAIT, 1.0),
-                        new Command(CommandType.SHOOTER_REV, 0.0),
-                        new Command(CommandType.ELEVATOR, ElevatorPositions.DOWN),
-                        new Command(CommandType.MOVE, 0.2, 45, 1.0),
-                        new Command(CommandType.TURN, 0)
+                        new Command(CommandType.SHOOTER_REV),
+                        new Command(CommandType.TURN, AngleUnit.DEGREES, 0.0),
+                        new Command(CommandType.MOVE, 1.1, 0.0, 1.0)
+                        //TODO Add a turn to 0 at the end
+                        //TODO "If we get the elevator junk working the shooter junk is consistently shooting well"-Brendan, 2021
 
                 )
         );
     }
-
 }

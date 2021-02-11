@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import static org.firstinspires.ftc.teamcode.Constants.*;
 /**
  * Created by Brendan Clark on 09/24/2020 at 11:54 AM.
@@ -24,11 +26,17 @@ public class Command {
 
     }
 
-    public Command(CommandType commandType, double angleOrDuration) {
+    public Command(CommandType commandType, AngleUnit angleUnit, double angle) {
 
         this.commandType = commandType;
-        this.angle = Math.toRadians(angleOrDuration);
-        this.duration = angleOrDuration;
+        if(angleUnit.bVal == 0) {
+            this.angle = Math.toRadians(angle);
+        } else {
+            this.angle = angle;
+        }
+    }
+
+    public Command(CommandType commandType, double duration) {
 
     }
 
