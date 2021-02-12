@@ -329,6 +329,8 @@ public abstract class AutoBaseEncoder extends OpMode {
             }
             if (targetVisible) {
                 distanceFromImage += (lastLocation.getTranslation().get(2));
+            } else {
+                distanceFromImage += 208.0;
             }
             count ++;
         } else {

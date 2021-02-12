@@ -63,10 +63,10 @@ public class Constants {
         */
         DOWN(0.15),  // 0 degrees = 0.15, 2.2 degrees per .01
         MIDDLE(0.45),  //45 degrees and some
-        RING_ONE(0.52),
-        RING_TWO(0.55),
-        RING_THREE(0.58),
-        UNJAM(0.6); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
+        RING_ONE(0.54),
+        RING_TWO(0.575),
+        RING_THREE(0.595),
+        UNJAM(0.62); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
 
         protected final double positionValue;
 
