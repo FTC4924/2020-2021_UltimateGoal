@@ -18,14 +18,14 @@ public class Constants {
     protected static final float CAMERA_Y_ROTATE = 0;
     protected static final float CAMERA_Z_ROTATE = 0;
 
-    protected enum allianceColor {
+    protected enum AllianceColor {
 
         BLUE(1),
         RED(-1);
 
         protected final int direction;
 
-        allianceColor(int direction) { this.direction = direction; }
+        AllianceColor(int direction) { this.direction = direction; }
 
     }
 

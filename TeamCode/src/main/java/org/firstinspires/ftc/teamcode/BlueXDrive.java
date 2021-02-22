@@ -34,8 +34,8 @@ public class BlueXDrive extends OpMode {
     private boolean xPressed;
     private boolean rightStickPressed;
     private boolean collectionMaxPower;
-    private boolean bristlesIn;
-    private boolean bristlesOut;
+    private boolean collectionIn;
+    private boolean collectionOut;
 
     private boolean rightBumperPressed;
     private boolean leftBumperPressed;
@@ -104,8 +104,8 @@ public class BlueXDrive extends OpMode {
 
         bPressed = false;
         xPressed = false;
-        bristlesIn = false;
-        bristlesOut = false;
+        collectionIn = false;
+        collectionOut = false;
 
         rightBumperPressed = false;
         leftBumperPressed = false;
@@ -184,7 +184,7 @@ public class BlueXDrive extends OpMode {
                 .translation(0, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0, 0)));
 
-        allTrackables = new ArrayList<VuforiaTrackable>();
+        allTrackables = new ArrayList<>();
         allTrackables.addAll(targetsUltimateGoal);
 
         for (VuforiaTrackable trackable : allTrackables) {
@@ -397,9 +397,9 @@ public class BlueXDrive extends OpMode {
         if (gamepad2.x) {
             if (!xPressed) {
                 xPressed = true;
-                bristlesIn = !bristlesIn;
-                if (bristlesIn) {
-                    bristlesOut = false;
+                collectionIn = !collectionIn;
+                if (collectionIn) {
+                    collectionOut = false;
                 }
             }
         } else {
@@ -408,9 +408,9 @@ public class BlueXDrive extends OpMode {
         if (gamepad2.b) {
             if (!bPressed) {
                 bPressed = true;
-                bristlesOut = !bristlesOut;
-                if (bristlesOut) {
-                    bristlesIn = false;
+                collectionOut = !collectionOut;
+                if (collectionOut) {
+                    collectionIn = false;
                 }
             }
         } else {
@@ -426,14 +426,14 @@ public class BlueXDrive extends OpMode {
         }
 
         //Setting the bristles power
-        if (bristlesIn) {
+        if (collectionIn) {
             if(collectionMaxPower){
                 bristles.setPower(1.0);
             } else {
                 bristles.setPower(BRISTLES_DEFAULT_POWER);
             }
             conveyor.setPosition(1.0);
-        } else if (bristlesOut) {
+        } else if (collectionOut) {
             bristles.setPower(BRISTLES_DEFAULT_POWER * -1);
             conveyor.setPosition(0.0);
         } else {
@@ -471,7 +471,7 @@ public class BlueXDrive extends OpMode {
             leftBumperPressed = false;
         }
 
-        if(bristlesIn) {
+        if(collectionIn) {
             elevatorPositionIndex = 0;
         }
 

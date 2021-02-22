@@ -16,6 +16,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvPipeline;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,12 +38,13 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
  * Created by Brendan Clark on 09/24/2020 at 11:51 AM.
  */
 
-public abstract class AutoBaseEncoder extends OpMode {
+public abstract class AutoBase extends OpMode {
 
     /*
     We cleaned up the code, hopefully fixed vuforia, got the code to use motor encoders regardless of the battery's charge, and modularised some of the code. Changed the Vuforia code to detect the image then turn, rather than detecting the image while turning.
      */
 
+    private AllianceColor allianceColor;
     private ArrayList<Command> commands;
     private Command currentCommand;
     private int commandIndex;
@@ -80,6 +90,8 @@ public abstract class AutoBaseEncoder extends OpMode {
     private VuforiaLocalizer.Parameters vuforiaParameters;
     private VuforiaLocalizer vuforia;
 
+    OpenCvCamera webcam;
+
     private VuforiaTrackables targetsUltimateGoal;
     private List<VuforiaTrackable> allTrackables;
 
@@ -87,7 +99,7 @@ public abstract class AutoBaseEncoder extends OpMode {
     private double distanceFromImage;
 
     public void init() {
-
+        allianceColor = getAllianceColor();
         commands = getCommands();
         commandIndex = 0;
         currentCommand = commands.get(0);
@@ -173,7 +185,6 @@ public abstract class AutoBaseEncoder extends OpMode {
         distanceFromImage = 0.0;
 
         targetsUltimateGoal.activate();
-
     }
 
     public void start() {
@@ -384,7 +395,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         }
     }
 
-    protected double getAimAngle(allianceColor allianceColor, double targetX) {
+    protected double getAimAngle(double targetX) {
         return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
     }
 
@@ -400,6 +411,7 @@ public abstract class AutoBaseEncoder extends OpMode {
         }
     }
 
+    protected abstract AllianceColor getAllianceColor();
     protected abstract ArrayList<Command> getCommands();
 
 }

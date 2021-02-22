@@ -17,17 +17,18 @@ public class Command {
 
     public ElevatorPositions elevatorPosition;
 
-    public Command(CommandType commandType, double distance, double angle, double power) {
-
+    public Command(CommandType commandType, AngleUnit angleUnit, double distance, double angle, double power) {
         this.commandType = commandType;
-        this.angle = Math.toRadians(angle) ;
-        this.power = power;
         this.distance = distance;
-
+        if(angleUnit.bVal == 0) {
+            this.angle = Math.toRadians(angle);
+        } else {
+            this.angle = angle;
+        }
+        this.power = power;
     }
 
     public Command(CommandType commandType, AngleUnit angleUnit, double angle) {
-
         this.commandType = commandType;
         if(angleUnit.bVal == 0) {
             this.angle = Math.toRadians(angle);
@@ -37,6 +38,7 @@ public class Command {
     }
 
     public Command(CommandType commandType, double duration) {
+        this.commandType = commandType;
         this.duration = duration;
     }
 
