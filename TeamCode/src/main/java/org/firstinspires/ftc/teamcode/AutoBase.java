@@ -16,14 +16,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,20 +30,17 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 
 
 /**
- * Created by Brendan Clark on 09/24/2020 at 11:51 AM.
+ * The base that all of the autonomous programs run off of.
  */
 
 public abstract class AutoBase extends OpMode {
 
-    /*
-    We cleaned up the code, hopefully fixed vuforia, got the code to use motor encoders regardless of the battery's charge, and modularised some of the code. Changed the Vuforia code to detect the image then turn, rather than detecting the image while turning.
-     */
-
     protected static AllianceColor allianceColor;
-    private ArrayList<Command> commands;
+    private ArrayList<Command> currentCommands;
+    private ArrayList<Command> newCommands;
     private ArrayList<ArrayList<Command>> upstreamCommands;
     private Command currentCommand;
-    private int commandIndex;
+    private int currentCommandIndex;
     private ArrayList<Integer> upstreamCommandIndexes;
     private boolean commandFirstLoop;
     private int count;
@@ -82,7 +74,7 @@ public abstract class AutoBase extends OpMode {
 
     private double currentRobotAngle;
     private double targetAngle;
-    private double robotAngleError;
+    private double angleError;
 
     private OpenGLMatrix robotFromCamera;
     private OpenGLMatrix lastLocation;
@@ -107,9 +99,9 @@ public abstract class AutoBase extends OpMode {
 
     public void init() {
         allianceColor = getAllianceColor();
-        commands = getCommands();
-        commandIndex = 0;
-        currentCommand = commands.get(0);
+        currentCommands = getCommands();
+        currentCommandIndex = 0;
+        currentCommand = currentCommands.get(0);
         commandFirstLoop = true;
         count = 0;
 
@@ -165,7 +157,7 @@ public abstract class AutoBase extends OpMode {
 
         currentRobotAngle = 0.0;
         targetAngle = 0.0;
-        robotAngleError = 0.0;
+        angleError = 0.0;
 
         robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -218,15 +210,7 @@ public abstract class AutoBase extends OpMode {
         telemetry.addData("Ring Number", pipeline.getRingNumber());
         telemetry.addData("Cb", pipeline.avg1);
 
-        leftFrontPower = 0;
-        leftBackPower = 0;
-        rightFrontPower = 0;
-        rightBackPower = 0;
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
-        currentRobotAngle = angles.firstAngle;
-        robotAngleError = targetAngle - currentRobotAngle;
-        robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+        getAngleError();
 
         switch (currentCommand.commandType) {
             case MOVE:
@@ -262,28 +246,11 @@ public abstract class AutoBase extends OpMode {
                 break;
         }
 
-        leftFrontTargetPosition += robotAngleError * 20;
-        leftBackTargetPosition += robotAngleError * 20;
-        rightFrontTargetPosition += robotAngleError * 20;
-        rightBackTargetPosition += robotAngleError * 20;
+        gyroCorrection();
 
-        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
-        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
-        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
-        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
+        setWheelPowersAndPositions();
 
-        leftFrontPower += robotAngleError * 3;
-        leftBackPower += robotAngleError * 3;
-        rightFrontPower += robotAngleError * 3;
-        rightBackPower += robotAngleError * 3;
-
-        // Adjusts motor speed.
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightFrontPower);
-        rightBack.setPower(rightBackPower);
-
-        telemetry.addData("targetVisible", targetVisible);
+        newCommands();
     }
 
     /**
@@ -309,8 +276,8 @@ public abstract class AutoBase extends OpMode {
         }
 
         /*Determines what power each wheel should get based on the angle we get from the stick
-                    plus the current robot angle so that the controls are independent of what direction the
-                    robot is facing*/
+        plus the current robot angle so that the controls are independent of what direction the
+        robot is facing*/
         leftFrontPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
         leftBackPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
         rightFrontPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
@@ -338,10 +305,10 @@ public abstract class AutoBase extends OpMode {
         if(commandFirstLoop) {
             commandFirstLoop = false;
             targetAngle = currentCommand.angle;
-            robotAngleError = targetAngle - currentRobotAngle;
-            robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+            angleError = targetAngle - currentRobotAngle;
+            angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
         }
-        if(Math.abs(robotAngleError) < TOLERANCE) {
+        if(Math.abs(angleError) < TOLERANCE) {
             startNextCommand();
         }
     }
@@ -419,40 +386,101 @@ public abstract class AutoBase extends OpMode {
         }
     }
 
+    /**
+     * Detects how many rings there are.
+     */
     private void detectRingNumber() {
-        upstreamCommands.add(commands);
         switch(pipeline.getRingNumber()) {
             case NONE:
-                commands = currentCommand.noRingsCommands;
+                newCommands = currentCommand.noRingsCommands;
                 break;
             case ONE:
-                commands = currentCommand.oneRingCommands;
+                newCommands = currentCommand.oneRingCommands;
                 break;
             case FOUR:
-                commands = currentCommand.fourRingsCommands;
+                newCommands = currentCommand.fourRingsCommands;
                 break;
         }
-        upstreamCommandIndexes.add(commandIndex);
-        commandIndex = 0;
     }
 
+    /**
+     * Corrects the target positions and powers of the wheels based on the angle error.
+     */
+    private void gyroCorrection() {
+        leftFrontTargetPosition += angleError * 20;
+        leftBackTargetPosition += angleError * 20;
+        rightFrontTargetPosition += angleError * 20;
+        rightBackTargetPosition += angleError * 20;
+
+        leftFrontPower += angleError * 3;
+        leftBackPower += angleError * 3;
+        rightFrontPower += angleError * 3;
+        rightBackPower += angleError * 3;
+    }
+
+    /**
+     * Sets the power and position of each wheel
+     */
+    private void setWheelPowersAndPositions() {
+        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
+        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
+        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
+        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
+
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
+    }
+
+    /**
+     * Returns the error between the angle the gyroscope sensor reads, and the target angle.
+     */
+    private void getAngleError() {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
+        currentRobotAngle = angles.firstAngle;
+        angleError = targetAngle - currentRobotAngle;
+        angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+    }
+
+    /**
+     * If there are new commands, saves the current commands, and replaces them with the new ones.
+     */
+    private void newCommands() {
+        if(newCommands.size() != 0) {
+            upstreamCommands.add(0, currentCommands);
+            upstreamCommandIndexes.add(0, currentCommandIndex);
+            currentCommands = newCommands;
+            currentCommandIndex = 0;
+        }
+    }
+
+    /**
+     * Returns what angle the robot should aim at based on the target's x distance away from the
+     * image.
+     */
     protected double getAimAngle(double targetX) {
         return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
     }
 
     /**
-     * Starts the next command in the sequence.
+     * Starts the next command in the sequence. If there are no commands left, checks if there are
+     * saved commands and goes through them in a first in last out sequence.
      */
     private void startNextCommand() {
-        commandIndex ++;
-        if (commandIndex < commands.size()) {
-            currentCommand = commands.get(commandIndex);
+        currentCommandIndex++;
+        if (currentCommandIndex < currentCommands.size()) {
+            currentCommand = currentCommands.get(currentCommandIndex);
+            leftFrontPower = 0;
+            leftBackPower = 0;
+            rightFrontPower = 0;
+            rightBackPower = 0;
             commandFirstLoop = true;
             resetStartTime();
         } else if (upstreamCommands.size() > 0) {
-            commands = upstreamCommands.get(0);
+            currentCommands = upstreamCommands.get(0);
             upstreamCommands.remove(0);
-            commandIndex = upstreamCommandIndexes.get(0);
+            currentCommandIndex = upstreamCommandIndexes.get(0);
             upstreamCommandIndexes.remove(0);
         }
     }

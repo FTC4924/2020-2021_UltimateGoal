@@ -12,6 +12,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 /**
  * Contains constants for all of the programs in one file for easy access.
  */
+
 public class Constants {
 
     protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASe" +
