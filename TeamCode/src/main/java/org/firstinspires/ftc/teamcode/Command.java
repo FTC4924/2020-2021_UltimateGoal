@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
+import java.util.ArrayList;
+
 import static org.firstinspires.ftc.teamcode.Constants.*;
 /**
  * Created by Brendan Clark on 09/24/2020 at 11:54 AM.
@@ -10,6 +13,9 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 public class Command {
 
     public CommandType commandType;
+    public ArrayList<Command> noRingsCommands;
+    public ArrayList<Command> oneRingCommands;
+    public ArrayList<Command> fourRingsCommands;
     public double duration = 0;
     public double distance = 0;
     public double angle = 0;
@@ -51,6 +57,11 @@ public class Command {
         this.commandType = commandType;
     }
 
-
+    public Command(CommandType commandType, ArrayList<Command> noRingsCommands, ArrayList<Command> oneRingCommands, ArrayList<Command> fourRingsCommands) {
+        this.commandType = commandType;
+        this.noRingsCommands = noRingsCommands;
+        this.oneRingCommands = oneRingCommands;
+        this.fourRingsCommands = fourRingsCommands;
+    }
 
 }

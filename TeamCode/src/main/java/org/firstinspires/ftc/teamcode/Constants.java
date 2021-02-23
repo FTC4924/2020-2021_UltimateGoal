@@ -46,7 +46,8 @@ public class Constants {
         WAIT,
         SHOOTER_REV,
         DETECT_IMAGE,
-        KICKER
+        KICKER,
+        DETECT_RING_NUMBER
 
     }
 

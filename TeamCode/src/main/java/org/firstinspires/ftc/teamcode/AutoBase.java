@@ -46,8 +46,10 @@ public abstract class AutoBase extends OpMode {
 
     private AllianceColor allianceColor;
     private ArrayList<Command> commands;
+    private ArrayList<ArrayList<Command>> upstreamCommands;
     private Command currentCommand;
     private int commandIndex;
+    private ArrayList<Integer> upstreamCommandIndexes;
     private boolean commandFirstLoop;
     private int count;
 
@@ -261,6 +263,10 @@ public abstract class AutoBase extends OpMode {
             case KICKER:
                 kicker();
                 break;
+
+            case DETECT_RING_NUMBER:
+                detectRingNumber();
+                break;
         }
 
         leftFrontTargetPosition += robotAngleError * 20;
@@ -421,6 +427,23 @@ public abstract class AutoBase extends OpMode {
         }
     }
 
+    private void detectRingNumber() {
+        upstreamCommands.add(commands);
+        switch(pipeline.getRingNumber()) {
+            case NONE:
+                commands = currentCommand.noRingsCommands;
+                break;
+            case ONE:
+                commands = currentCommand.oneRingCommands;
+                break;
+            case FOUR:
+                commands = currentCommand.fourRingsCommands;
+                break;
+        }
+        upstreamCommandIndexes.add(commandIndex);
+        commandIndex = 0;
+    }
+
     protected double getAimAngle(double targetX) {
         return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
     }
@@ -434,6 +457,11 @@ public abstract class AutoBase extends OpMode {
             currentCommand = commands.get(commandIndex);
             commandFirstLoop = true;
             resetStartTime();
+        } else if (upstreamCommands.size() > 0) {
+            commands = upstreamCommands.get(0);
+            upstreamCommands.remove(0);
+            commandIndex = upstreamCommandIndexes.get(0);
+            upstreamCommandIndexes.remove(0);
         }
     }
 

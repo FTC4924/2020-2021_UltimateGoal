@@ -43,11 +43,6 @@ class RingDetectionPipeline extends OpenCvPipeline
          */
         inputToCb(firstFrame);
 
-        /*
-         * Submats are a persistent reference to a region of the parent
-         * buffer. Any changes to the child affect the parent, and the
-         * reverse also holds true.
-         */
         region1_Cb = Cb.submat(new Rect(REGION1_POINTA, REGION1_POINTB));
     }
 
