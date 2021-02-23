@@ -202,7 +202,6 @@ public abstract class AutoBase extends OpMode {
                 // very CPU-taxing to rotate in software. GPU acceleration has been observed to cause
                 // issues on some devices, though, so if you experience issues you may wish to disable it.
                 openCvPassthrough.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
-                openCvPassthrough.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
                 pipeline = new RingDetectionPipeline();
                 openCvPassthrough.setPipeline(pipeline);
 
