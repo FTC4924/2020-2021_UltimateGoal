@@ -44,7 +44,7 @@ public abstract class AutoBase extends OpMode {
     We cleaned up the code, hopefully fixed vuforia, got the code to use motor encoders regardless of the battery's charge, and modularised some of the code. Changed the Vuforia code to detect the image then turn, rather than detecting the image while turning.
      */
 
-    private AllianceColor allianceColor;
+    protected static AllianceColor allianceColor;
     private ArrayList<Command> commands;
     private ArrayList<ArrayList<Command>> upstreamCommands;
     private Command currentCommand;
@@ -86,6 +86,8 @@ public abstract class AutoBase extends OpMode {
 
     private OpenGLMatrix robotFromCamera;
     private OpenGLMatrix lastLocation;
+
+
 
     private int cameraMonitorViewId;
     int[] viewportContainerIds;
@@ -197,20 +199,12 @@ public abstract class AutoBase extends OpMode {
         openCvPassthrough.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
-            public void onOpened()
-            {
-                // Using GPU acceleration can be particularly helpful when using Vuforia passthrough
-                // mode, because Vuforia often chooses high resolutions (such as 720p) which can be
-                // very CPU-taxing to rotate in software. GPU acceleration has been observed to cause
-                // issues on some devices, though, so if you experience issues you may wish to disable it.
+            public void onOpened() {
                 openCvPassthrough.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+
                 pipeline = new RingDetectionPipeline();
                 openCvPassthrough.setPipeline(pipeline);
 
-                // We don't get to choose resolution, unfortunately. The width and height parameters
-                // are entirely ignored when using Vuforia passthrough mode. However, they are left
-                // in the method signature to provide interface compatibility with the other types
-                // of cameras.
                 openCvPassthrough.startStreaming(0,0, OpenCvCameraRotation.UPRIGHT);
             }
         });
@@ -235,7 +229,6 @@ public abstract class AutoBase extends OpMode {
         robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
 
         switch (currentCommand.commandType) {
-
             case MOVE:
                 holonomicDrive();
                 break;
@@ -291,7 +284,6 @@ public abstract class AutoBase extends OpMode {
         rightBack.setPower(rightBackPower);
 
         telemetry.addData("targetVisible", targetVisible);
-
     }
 
     /**

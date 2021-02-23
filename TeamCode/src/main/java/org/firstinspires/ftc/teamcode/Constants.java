@@ -60,17 +60,9 @@ public class Constants {
     }
 
     static final Scalar GREEN = new Scalar(0, 255, 0);
-
-    static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(10,245);
-    static final int REGION_WIDTH = 60;
-    static final int REGION_HEIGHT = 60;
-
-    static final Point REGION1_POINTA = new Point(
-            REGION1_TOPLEFT_ANCHOR_POINT.x,
-            REGION1_TOPLEFT_ANCHOR_POINT.y);
-    static final Point REGION1_POINTB = new Point(
-            REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-            REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
+    protected static double REGION_WIDTH = 60;
+    protected static double REGION_HEIGHT = 60;
+    protected static int RESOLUTION_WIDTH = 1280;
 
     protected static final double TOLERANCE = 0.05;
 

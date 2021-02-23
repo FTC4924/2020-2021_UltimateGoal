@@ -4,18 +4,19 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import static org.firstinspires.ftc.teamcode.Constants.*;
+import static org.firstinspires.ftc.teamcode.AutoBase.allianceColor;
 
 class RingDetectionPipeline extends OpenCvPipeline
 {
+
+    private Point Region1CentralAnchorPoint;
+    private static Point Region1PointA;
+    private static Point Region1PointB;
+
     Mat region1_Cb;
     Mat YCrCb = new Mat();
     Mat Cb = new Mat();
@@ -32,18 +33,22 @@ class RingDetectionPipeline extends OpenCvPipeline
     @Override
     public void init(Mat firstFrame)
     {
-        /*
-         * We need to call this in order to make sure the 'Cb'
-         * object is initialized, so that the submats we make
-         * will still be linked to it on subsequent frames. (If
-         * the object were to only be initialized in processFrame,
-         * then the submats would become delinked because the backing
-         * buffer would be re-allocated the first time a real frame
-         * was crunched)
-         */
+        if(allianceColor == AllianceColor.RED) {
+            Region1CentralAnchorPoint = new Point(10,245);
+        } else {
+            Region1CentralAnchorPoint = new Point(RESOLUTION_WIDTH - 10,245);
+        }
+
+        Region1PointA = new Point(
+                Region1CentralAnchorPoint.x - REGION_WIDTH/2,
+                Region1CentralAnchorPoint.y - REGION_WIDTH/2);
+        Region1PointB = new Point(
+                Region1CentralAnchorPoint.x + REGION_WIDTH/2,
+                Region1CentralAnchorPoint.y + REGION_HEIGHT/2);
+
         inputToCb(firstFrame);
 
-        region1_Cb = Cb.submat(new Rect(REGION1_POINTA, REGION1_POINTB));
+        region1_Cb = Cb.submat(new Rect(Region1PointA, Region1PointB));
     }
 
     @Override
@@ -63,8 +68,8 @@ class RingDetectionPipeline extends OpenCvPipeline
 
         Imgproc.rectangle(
                 input, // Buffer to draw on
-                REGION1_POINTA, // First point which defines the rectangle
-                REGION1_POINTB, // Second point which defines the rectangle
+                Region1PointA, // First point which defines the rectangle
+                Region1PointB, // Second point which defines the rectangle
                 GREEN, // The color the rectangle is drawn in
                 2); // Thickness of the rectangle lines
 
