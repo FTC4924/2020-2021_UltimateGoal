@@ -23,7 +23,7 @@ public class AutoTest extends AutoBase {
         return new ArrayList<>(
                 Arrays.asList(
 
-                        new Command(CommandType.MOVE, AngleUnit.DEGREES, 10, 0, 0.4)
+                        new Command(CommandType.WAIT, 30.0)
 
                 )
         );

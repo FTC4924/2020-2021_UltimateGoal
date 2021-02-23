@@ -35,6 +35,7 @@ public class RedPowerShotsA extends AutoBase {
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_THREE),
                         new Command(CommandType.KICKER),
                         new Command(CommandType.SHOOTER_REV),
+                        new Command(CommandType.ELEVATOR, ElevatorPositions.DOWN),
                         new Command(CommandType.TURN, AngleUnit.DEGREES, -22.5),
                         new Command(CommandType.MOVE, AngleUnit.DEGREES, 0.8, -22.5, 1.0),
                         new Command(CommandType.MOVE, AngleUnit.DEGREES, 5.0, 180.0, 1.0),

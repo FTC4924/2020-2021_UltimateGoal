@@ -85,12 +85,15 @@ public abstract class AutoBase extends OpMode {
     private OpenGLMatrix robotFromCamera;
     private OpenGLMatrix lastLocation;
 
-    private WebcamName webcam1;
     private int cameraMonitorViewId;
+    int[] viewportContainerIds;
+
+    private WebcamName webcam1;
     private VuforiaLocalizer.Parameters vuforiaParameters;
     private VuforiaLocalizer vuforia;
 
-    OpenCvCamera webcam;
+    OpenCvCamera openCvPassthrough;
+    RingDetectionPipeline pipeline;
 
     private VuforiaTrackables targetsUltimateGoal;
     private List<VuforiaTrackable> allTrackables;
@@ -147,13 +150,13 @@ public abstract class AutoBase extends OpMode {
 
         shooterReved = false;
 
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.mode = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled = false;
+        BNO055IMU.Parameters imuParameters = new BNO055IMU.Parameters();
+        imuParameters.mode = BNO055IMU.SensorMode.IMU;
+        imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imuParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        imuParameters.loggingEnabled = false;
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
+        imu.initialize(imuParameters);
         angles = null;
 
         currentRobotAngle = 0.0;
@@ -165,9 +168,10 @@ public abstract class AutoBase extends OpMode {
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
         lastLocation = null;
 
-        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        viewportContainerIds = OpenCvCameraFactory.getInstance().splitLayoutForMultipleViewports(cameraMonitorViewId, 2, OpenCvCameraFactory.ViewportSplitMethod.VERTICALLY);
 
+        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
         vuforiaParameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         vuforiaParameters.vuforiaLicenseKey = VUFORIA_KEY;
         vuforiaParameters.cameraName = webcam1;
@@ -185,6 +189,30 @@ public abstract class AutoBase extends OpMode {
         distanceFromImage = 0.0;
 
         targetsUltimateGoal.activate();
+
+        openCvPassthrough = OpenCvCameraFactory.getInstance().createVuforiaPassthrough(vuforia, vuforiaParameters, viewportContainerIds[1]);
+
+        openCvPassthrough.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                // Using GPU acceleration can be particularly helpful when using Vuforia passthrough
+                // mode, because Vuforia often chooses high resolutions (such as 720p) which can be
+                // very CPU-taxing to rotate in software. GPU acceleration has been observed to cause
+                // issues on some devices, though, so if you experience issues you may wish to disable it.
+                openCvPassthrough.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+                openCvPassthrough.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+                pipeline = new RingDetectionPipeline();
+                openCvPassthrough.setPipeline(pipeline);
+
+                // We don't get to choose resolution, unfortunately. The width and height parameters
+                // are entirely ignored when using Vuforia passthrough mode. However, they are left
+                // in the method signature to provide interface compatibility with the other types
+                // of cameras.
+                openCvPassthrough.startStreaming(0,0, OpenCvCameraRotation.UPRIGHT);
+            }
+        });
     }
 
     public void start() {
@@ -192,9 +220,8 @@ public abstract class AutoBase extends OpMode {
     }
 
     public void loop() {
-        telemetry.addData("commandType", currentCommand.commandType);
-        telemetry.addData("targetAngle", Math.toDegrees(targetAngle));
-        telemetry.addData("distanceFromImage", distanceFromImage);
+        telemetry.addData("Ring Number", pipeline.getRingNumber());
+        telemetry.addData("Cb", pipeline.avg1);
 
         leftFrontPower = 0;
         leftBackPower = 0;

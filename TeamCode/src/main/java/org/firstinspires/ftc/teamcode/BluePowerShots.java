@@ -36,6 +36,7 @@ public class BluePowerShots extends AutoBase {
                         new Command(CommandType.ELEVATOR, ElevatorPositions.RING_THREE),
                         new Command(CommandType.KICKER),
                         new Command(CommandType.SHOOTER_REV),
+                        new Command(CommandType.ELEVATOR, ElevatorPositions.DOWN),
                         new Command(CommandType.TURN, AngleUnit.DEGREES, 0.0),
                         new Command(CommandType.MOVE, AngleUnit.DEGREES, 1.1, 0.0, 1.0)
                         //TODO Add a turn to 0 at the end
