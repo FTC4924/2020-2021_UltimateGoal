@@ -95,9 +95,9 @@ public class Constants {
         MIDDLE(0.45),  //45 degrees and some
         RING_ONE(0.54),
         RING_TWO(0.575),
-        RING_THREE(0.595),
-        UNJAM(0.62); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
-
+        RING_THREE(0.62),
+        UNJAM(0.66); //Requested by Serena, added by Coach Ethan 1/19/2021. Corresponds to full up, 90 degrees
+        // Arnit changed the RING_THREE From 0.595 to 62 and made UNJAM from 0.62 to 0.66 2/23/2021 5:04PM
         protected final double positionValue;
 
         ElevatorPositions(double positionValue) { this.positionValue = positionValue; }
