@@ -77,9 +77,8 @@ public abstract class AutoBase extends OpMode {
     private double angleError;
 
     private OpenGLMatrix robotFromCamera;
+    private OpenGLMatrix robotLocationTransform;
     private OpenGLMatrix lastLocation;
-
-
 
     private int cameraMonitorViewId;
     int[] viewportContainerIds;
@@ -88,20 +87,23 @@ public abstract class AutoBase extends OpMode {
     private VuforiaLocalizer.Parameters vuforiaParameters;
     private VuforiaLocalizer vuforia;
 
-    OpenCvCamera openCvPassthrough;
-    RingDetectionPipeline pipeline;
-
     private VuforiaTrackables targetsUltimateGoal;
     private List<VuforiaTrackable> allTrackables;
 
     private boolean targetVisible;
     private double distanceFromImage;
 
+    OpenCvCamera openCvPassthrough;
+    RingDetectionPipeline pipeline;
+
     public void init() {
         allianceColor = getAllianceColor();
         currentCommands = getCommands();
-        currentCommandIndex = 0;
+        newCommands = null;
+        upstreamCommands = new ArrayList<>();
         currentCommand = currentCommands.get(0);
+        currentCommandIndex = 0;
+        upstreamCommandIndexes = new ArrayList<>();
         commandFirstLoop = true;
         count = 0;
 
@@ -163,6 +165,7 @@ public abstract class AutoBase extends OpMode {
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
         lastLocation = null;
+        robotLocationTransform = null;
 
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         viewportContainerIds = OpenCvCameraFactory.getInstance().splitLayoutForMultipleViewports(cameraMonitorViewId, 2, OpenCvCameraFactory.ViewportSplitMethod.VERTICALLY);
@@ -181,10 +184,10 @@ public abstract class AutoBase extends OpMode {
             ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters.cameraDirection);
         }
 
+        targetsUltimateGoal.activate();
+
         targetVisible = false;
         distanceFromImage = 0.0;
-
-        targetsUltimateGoal.activate();
 
         openCvPassthrough = OpenCvCameraFactory.getInstance().createVuforiaPassthrough(vuforia, vuforiaParameters, viewportContainerIds[1]);
 
@@ -289,10 +292,10 @@ public abstract class AutoBase extends OpMode {
         rightFrontPower *= currentCommand.power;
         rightBackPower *= currentCommand.power;
 
-        if (Math.abs(leftFront.getCurrentPosition() - leftFrontTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(leftBack.getCurrentPosition() - leftBackTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(rightFront.getCurrentPosition() - rightFrontTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(rightBack.getCurrentPosition() - rightBackTargetPosition) <= ENCODER_TOLERANCE) {
+        if (Math.abs(leftFront.getCurrentPosition() - leftFrontTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(leftBack.getCurrentPosition() - leftBackTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(rightFront.getCurrentPosition() - rightFrontTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(rightBack.getCurrentPosition() - rightBackTargetPosition) <= ENCODER_POSITION_TOLERANCE) {
 
             startNextCommand();
         }
@@ -308,7 +311,7 @@ public abstract class AutoBase extends OpMode {
             angleError = targetAngle - currentRobotAngle;
             angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
         }
-        if(Math.abs(angleError) < TOLERANCE) {
+        if(Math.abs(angleError) < ANGLE_ERROR_TOLERANCE) {
             startNextCommand();
         }
     }
@@ -317,26 +320,29 @@ public abstract class AutoBase extends OpMode {
      * Aims the robot at the target using a navigation image.
      */
     private void detectImage() {
-        if(count < 20) {
+        if(count < IMAGE_DETECTION_COUNT) {
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                     targetVisible = true;
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+
+                    robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                     if (robotLocationTransform != null) {
                         lastLocation = robotLocationTransform;
                     }
+
                     break;
                 }
             }
             if (targetVisible) {
                 distanceFromImage += (lastLocation.getTranslation().get(2));
             } else {
-                distanceFromImage += 208.0;
+                distanceFromImage += DEFAULT_DISTANCE_FROM_IMAGE;
             }
             count ++;
         } else {
-            distanceFromImage /= 20;
+            distanceFromImage /= IMAGE_DETECTION_COUNT;
+
             startNextCommand();
         }
     }
@@ -345,7 +351,7 @@ public abstract class AutoBase extends OpMode {
      * Changes the elevator position.
      */
     private void elevator() {
-        if(time < 2) {
+        if(time < ELEVATOR_MOVE_TIME) {
             elevator.setPosition(currentCommand.elevatorPosition.positionValue);
         } else {
             startNextCommand();
@@ -358,7 +364,7 @@ public abstract class AutoBase extends OpMode {
     private void revShooter() {
         shooterReved = !shooterReved;
         if(shooterReved) {
-            shooter.setPower(.68 * -1);
+            shooter.setPower(SHOOTER_POWER * -1);
         } else {
             shooter.setPower(0.0);
         }
@@ -379,7 +385,7 @@ public abstract class AutoBase extends OpMode {
      */
     private void kicker() {
         if(time < 1) {
-            kicker.setPosition(0.8);
+            kicker.setPosition(KICKER_KICK_POSITION);
         } else {
             kicker.setPosition(1.0);
             startNextCommand();
@@ -407,15 +413,15 @@ public abstract class AutoBase extends OpMode {
      * Corrects the target positions and powers of the wheels based on the angle error.
      */
     private void gyroCorrection() {
-        leftFrontTargetPosition += angleError * 20;
-        leftBackTargetPosition += angleError * 20;
-        rightFrontTargetPosition += angleError * 20;
-        rightBackTargetPosition += angleError * 20;
+        leftFrontTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        leftBackTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        rightFrontTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        rightBackTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
 
-        leftFrontPower += angleError * 3;
-        leftBackPower += angleError * 3;
-        rightFrontPower += angleError * 3;
-        rightBackPower += angleError * 3;
+        leftFrontPower += angleError * TURING_POWER_SCALAR;
+        leftBackPower += angleError * TURING_POWER_SCALAR;
+        rightFrontPower += angleError * TURING_POWER_SCALAR;
+        rightBackPower += angleError * TURING_POWER_SCALAR;
     }
 
     /**
@@ -438,7 +444,7 @@ public abstract class AutoBase extends OpMode {
      */
     private void getAngleError() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
-        currentRobotAngle = angles.firstAngle;
+        currentRobotAngle = angles.firstAngle + allianceColor.angleOffset;
         angleError = targetAngle - currentRobotAngle;
         angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
     }
@@ -460,7 +466,7 @@ public abstract class AutoBase extends OpMode {
      * image.
      */
     protected double getAimAngle(double targetX) {
-        return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
+        return allianceColor.direction * Math.atan((distanceFromImage - targetX) / HALF_FIELD_DISTANCE);
     }
 
     /**

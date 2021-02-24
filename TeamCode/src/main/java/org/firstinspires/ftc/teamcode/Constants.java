@@ -14,28 +14,27 @@ import org.openftc.easyopencv.OpenCvPipeline;
  */
 
 public class Constants {
+    protected static final double TICKS_PER_FOOT = 759.12;
+    protected static final double HALF_FIELD_DISTANCE = 1828.8;
 
-    protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASe" +
-            "XGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXD" +
-            "VNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGn" +
-            "Q0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O" +
-            "1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
-
-    protected static final float CAMERA_FORWARD_DISPLACEMENT = 57;
-    protected static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
-    protected static final float CAMERA_LEFT_DISPLACEMENT = 184;
-    protected static final float CAMERA_X_ROTATE = 0;
-    protected static final float CAMERA_Y_ROTATE = 0;
-    protected static final float CAMERA_Z_ROTATE = 0;
+    protected static final double CONTROLLER_TOLERANCE = 0.05;
+    protected static final double ANGLE_ERROR_TOLERANCE = 0.05;
+    protected static final double ENCODER_POSITION_TOLERANCE = 20.0;
 
     protected enum AllianceColor {
 
-        BLUE(1),
-        RED(-1);
+        BLUE(1, Math.PI/2, 914.0),
+        RED(-1, -1 * Math.PI/2, 300.0);
 
         protected final int direction;
+        protected final double angleOffset;
+        protected final double highGoalX;
 
-        AllianceColor(int direction) { this.direction = direction; }
+        AllianceColor(int direction, double angleOffset, double highGoalX) {
+            this.direction = direction;
+            this.angleOffset = angleOffset;
+            this.highGoalX = highGoalX;
+        }
 
     }
 
@@ -60,19 +59,32 @@ public class Constants {
 
     }
 
+    protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASe" +
+            "XGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXD" +
+            "VNMtaVxLDGOb1phJ8tg9/Udb1cxIUCifI+AHmcwj3eknyY1ZapF81n/R0mVSmuyApS2oGQLnETWaWK+kxkx8cGn" +
+            "Q0Nj7a79gStXqm97obOdzptw7PdDNqOfSLVcyKCegEO0zbGoInhRMDm0MPPTxwnBihZsjDuz+I5kDEZJZfBWZ9O" +
+            "1PZMeFmhe6O8oFwE07nFVoclw7j2P6qHbsKTabg3w9w4ZdeTSZI4sV2t9OhbF13e0MWeV";
+
+    protected static final float CAMERA_FORWARD_DISPLACEMENT = 57;
+    protected static final float CAMERA_VERTICAL_DISPLACEMENT = 0;
+    protected static final float CAMERA_LEFT_DISPLACEMENT = 184;
+    protected static final float CAMERA_X_ROTATE = 0;
+    protected static final float CAMERA_Y_ROTATE = 0;
+    protected static final float CAMERA_Z_ROTATE = 0;
+
+    protected static final int IMAGE_DETECTION_COUNT = 20;
+    protected static final double DEFAULT_DISTANCE_FROM_IMAGE = 208.0;
+
     static final Scalar GREEN = new Scalar(0, 255, 0);
     protected static double REGION_WIDTH = 60;
     protected static double REGION_HEIGHT = 60;
     protected static int RESOLUTION_WIDTH = 1280;
 
-    protected static final double TOLERANCE = 0.05;
+    protected static final double TURNING_ENCODER_POSITION_SCALAR = 20.0;
+    protected static final double TURING_POWER_SCALAR = 3.0;
 
-    protected static final double TURNING_REDUCTION = 1.0;
-
-    protected static final double FUNNEL_LEFT_DOWN = 0.3;
-    protected static final double FUNNEL_RIGHT_DOWN = 0.3;
-    protected static final double FUNNEL_LEFT_UP = 0.0;
-    protected static final double FUNNEL_RIGHT_UP = 0.0;
+    protected static final double FUNNEL_DOWN = 0.0;
+    protected static final double FUNNEL_UP = 0.0;
 
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
@@ -97,8 +109,10 @@ public class Constants {
         ElevatorPositions(double positionValue) { this.positionValue = positionValue; }
 
     }
+    protected static final double ELEVATOR_MOVE_TIME = 2.0;
 
-    protected static final double KICKER_REDUCTION = 0.3;
+    protected static final double KICKER_POSITION_SCALAR = 0.3;
+    protected static final double KICKER_KICK_POSITION = 0.8;
 
     protected static final double SHOOTER_LIFTER_MAX_POSITION = 0.8;
     protected static final double SHOOTER_LIFTER_MIN_POSITION = 0.2;
@@ -106,8 +120,5 @@ public class Constants {
     protected static final double SHOOTER_LIFTER_REDUCTION = .005;
 
     protected static final double SHOOTER_POWER = .70;
-
-    protected static final double TICKS_PER_FOOT = 759.12;
-    protected static final double ENCODER_TOLERANCE = 20.0;
 
 }

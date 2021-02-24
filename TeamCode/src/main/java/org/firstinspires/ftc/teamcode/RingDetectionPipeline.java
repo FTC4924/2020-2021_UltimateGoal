@@ -13,7 +13,6 @@ import static org.firstinspires.ftc.teamcode.AutoBase.allianceColor;
 class RingDetectionPipeline extends OpenCvPipeline
 {
 
-    private Point Region1CentralAnchorPoint;
     private static Point Region1PointA;
     private static Point Region1PointB;
 
@@ -33,18 +32,19 @@ class RingDetectionPipeline extends OpenCvPipeline
     @Override
     public void init(Mat firstFrame)
     {
+        Point region1CentralAnchorPoint;
         if(allianceColor == AllianceColor.RED) {
-            Region1CentralAnchorPoint = new Point(10,245);
+            region1CentralAnchorPoint = new Point(10,245);
         } else {
-            Region1CentralAnchorPoint = new Point(RESOLUTION_WIDTH - 10,245);
+            region1CentralAnchorPoint = new Point(RESOLUTION_WIDTH - 10,245);
         }
 
         Region1PointA = new Point(
-                Region1CentralAnchorPoint.x - REGION_WIDTH/2,
-                Region1CentralAnchorPoint.y - REGION_WIDTH/2);
+                region1CentralAnchorPoint.x - REGION_WIDTH/2,
+                region1CentralAnchorPoint.y - REGION_WIDTH/2);
         Region1PointB = new Point(
-                Region1CentralAnchorPoint.x + REGION_WIDTH/2,
-                Region1CentralAnchorPoint.y + REGION_HEIGHT/2);
+                region1CentralAnchorPoint.x + REGION_WIDTH/2,
+                region1CentralAnchorPoint.y + REGION_HEIGHT/2);
 
         inputToCb(firstFrame);
 

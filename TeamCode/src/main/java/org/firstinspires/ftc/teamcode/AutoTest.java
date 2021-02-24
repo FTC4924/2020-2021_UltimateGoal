@@ -35,7 +35,26 @@ public class AutoTest extends AutoBase {
                                 ),
                                 new ArrayList<>(
                                         Arrays.asList(
-                                                new Command(CommandType.MOVE, AngleUnit.DEGREES, 7, -90.0, .8)
+                                                new Command(CommandType.MOVE, AngleUnit.DEGREES, 7, -90.0, .8),
+                                                new Command(CommandType.WAIT, 5),
+                                                new Command(CommandType.DETECT_RING_NUMBER,
+                                                        new ArrayList<>(
+                                                                Arrays.asList(
+                                                                        new Command(CommandType.MOVE,  AngleUnit.DEGREES, 5, -90.0, .8)
+                                                                )
+                                                        ),
+                                                        new ArrayList<>(
+                                                                Arrays.asList(
+                                                                        new Command(CommandType.SHOOTER_REV),
+                                                                        new Command(CommandType.SHOOTER_REV)
+                                                                )
+                                                        ),
+                                                        new ArrayList<>(
+                                                                Arrays.asList(
+                                                                        new Command(CommandType.TURN, AngleUnit.DEGREES, 90)
+                                                                )
+                                                        )
+                                                )
                                         )
                                 )
                         ),
