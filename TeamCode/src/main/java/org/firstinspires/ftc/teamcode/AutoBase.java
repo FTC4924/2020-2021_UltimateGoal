@@ -16,14 +16,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,19 +30,18 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 
 
 /**
- * Created by Brendan Clark on 09/24/2020 at 11:51 AM.
+ * The base that all of the autonomous programs run off of.
  */
 
 public abstract class AutoBase extends OpMode {
 
-    /*
-    We cleaned up the code, hopefully fixed vuforia, got the code to use motor encoders regardless of the battery's charge, and modularised some of the code. Changed the Vuforia code to detect the image then turn, rather than detecting the image while turning.
-     */
-
-    private AllianceColor allianceColor;
-    private ArrayList<Command> commands;
+    protected static AllianceColor allianceColor;
+    private ArrayList<Command> currentCommands;
+    private ArrayList<Command> newCommands;
+    private ArrayList<ArrayList<Command>> upstreamCommands;
     private Command currentCommand;
-    private int commandIndex;
+    private int currentCommandIndex;
+    private ArrayList<Integer> upstreamCommandIndexes;
     private boolean commandFirstLoop;
     private int count;
 
@@ -80,9 +74,10 @@ public abstract class AutoBase extends OpMode {
 
     private double currentRobotAngle;
     private double targetAngle;
-    private double robotAngleError;
+    private double angleError;
 
     private OpenGLMatrix robotFromCamera;
+    private OpenGLMatrix robotLocationTransform;
     private OpenGLMatrix lastLocation;
 
     private int cameraMonitorViewId;
@@ -92,20 +87,23 @@ public abstract class AutoBase extends OpMode {
     private VuforiaLocalizer.Parameters vuforiaParameters;
     private VuforiaLocalizer vuforia;
 
-    OpenCvCamera openCvPassthrough;
-    RingDetectionPipeline pipeline;
-
     private VuforiaTrackables targetsUltimateGoal;
     private List<VuforiaTrackable> allTrackables;
 
     private boolean targetVisible;
     private double distanceFromImage;
 
+    OpenCvCamera openCvPassthrough;
+    RingDetectionPipeline pipeline;
+
     public void init() {
         allianceColor = getAllianceColor();
-        commands = getCommands();
-        commandIndex = 0;
-        currentCommand = commands.get(0);
+        currentCommands = getCommands();
+        newCommands = null;
+        upstreamCommands = new ArrayList<>();
+        currentCommand = currentCommands.get(0);
+        currentCommandIndex = 0;
+        upstreamCommandIndexes = new ArrayList<>();
         commandFirstLoop = true;
         count = 0;
 
@@ -161,12 +159,13 @@ public abstract class AutoBase extends OpMode {
 
         currentRobotAngle = 0.0;
         targetAngle = 0.0;
-        robotAngleError = 0.0;
+        angleError = 0.0;
 
         robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
         lastLocation = null;
+        robotLocationTransform = null;
 
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         viewportContainerIds = OpenCvCameraFactory.getInstance().splitLayoutForMultipleViewports(cameraMonitorViewId, 2, OpenCvCameraFactory.ViewportSplitMethod.VERTICALLY);
@@ -185,30 +184,22 @@ public abstract class AutoBase extends OpMode {
             ((VuforiaTrackableDefaultListener)trackable.getListener()).setPhoneInformation(robotFromCamera, vuforiaParameters.cameraDirection);
         }
 
+        targetsUltimateGoal.activate();
+
         targetVisible = false;
         distanceFromImage = 0.0;
-
-        targetsUltimateGoal.activate();
 
         openCvPassthrough = OpenCvCameraFactory.getInstance().createVuforiaPassthrough(vuforia, vuforiaParameters, viewportContainerIds[1]);
 
         openCvPassthrough.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
-            public void onOpened()
-            {
-                // Using GPU acceleration can be particularly helpful when using Vuforia passthrough
-                // mode, because Vuforia often chooses high resolutions (such as 720p) which can be
-                // very CPU-taxing to rotate in software. GPU acceleration has been observed to cause
-                // issues on some devices, though, so if you experience issues you may wish to disable it.
+            public void onOpened() {
                 openCvPassthrough.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED);
+
                 pipeline = new RingDetectionPipeline();
                 openCvPassthrough.setPipeline(pipeline);
 
-                // We don't get to choose resolution, unfortunately. The width and height parameters
-                // are entirely ignored when using Vuforia passthrough mode. However, they are left
-                // in the method signature to provide interface compatibility with the other types
-                // of cameras.
                 openCvPassthrough.startStreaming(0,0, OpenCvCameraRotation.UPRIGHT);
             }
         });
@@ -222,18 +213,9 @@ public abstract class AutoBase extends OpMode {
         telemetry.addData("Ring Number", pipeline.getRingNumber());
         telemetry.addData("Cb", pipeline.avg1);
 
-        leftFrontPower = 0;
-        leftBackPower = 0;
-        rightFrontPower = 0;
-        rightBackPower = 0;
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
-        currentRobotAngle = angles.firstAngle;
-        robotAngleError = targetAngle - currentRobotAngle;
-        robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+        getAngleError();
 
         switch (currentCommand.commandType) {
-
             case MOVE:
                 holonomicDrive();
                 break;
@@ -261,31 +243,17 @@ public abstract class AutoBase extends OpMode {
             case KICKER:
                 kicker();
                 break;
+
+            case DETECT_RING_NUMBER:
+                detectRingNumber();
+                break;
         }
 
-        leftFrontTargetPosition += robotAngleError * 20;
-        leftBackTargetPosition += robotAngleError * 20;
-        rightFrontTargetPosition += robotAngleError * 20;
-        rightBackTargetPosition += robotAngleError * 20;
+        gyroCorrection();
 
-        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
-        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
-        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
-        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
+        setWheelPowersAndPositions();
 
-        leftFrontPower += robotAngleError * 3;
-        leftBackPower += robotAngleError * 3;
-        rightFrontPower += robotAngleError * 3;
-        rightBackPower += robotAngleError * 3;
-
-        // Adjusts motor speed.
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightFrontPower);
-        rightBack.setPower(rightBackPower);
-
-        telemetry.addData("targetVisible", targetVisible);
-
+        newCommands();
     }
 
     /**
@@ -311,8 +279,8 @@ public abstract class AutoBase extends OpMode {
         }
 
         /*Determines what power each wheel should get based on the angle we get from the stick
-                    plus the current robot angle so that the controls are independent of what direction the
-                    robot is facing*/
+        plus the current robot angle so that the controls are independent of what direction the
+        robot is facing*/
         leftFrontPower = Math.cos(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
         leftBackPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle)*-1;
         rightFrontPower = Math.sin(currentCommand.angle + (Math.PI/4) - currentRobotAngle);
@@ -324,10 +292,10 @@ public abstract class AutoBase extends OpMode {
         rightFrontPower *= currentCommand.power;
         rightBackPower *= currentCommand.power;
 
-        if (Math.abs(leftFront.getCurrentPosition() - leftFrontTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(leftBack.getCurrentPosition() - leftBackTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(rightFront.getCurrentPosition() - rightFrontTargetPosition) <= ENCODER_TOLERANCE &&
-                Math.abs(rightBack.getCurrentPosition() - rightBackTargetPosition) <= ENCODER_TOLERANCE) {
+        if (Math.abs(leftFront.getCurrentPosition() - leftFrontTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(leftBack.getCurrentPosition() - leftBackTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(rightFront.getCurrentPosition() - rightFrontTargetPosition) <= ENCODER_POSITION_TOLERANCE &&
+                Math.abs(rightBack.getCurrentPosition() - rightBackTargetPosition) <= ENCODER_POSITION_TOLERANCE) {
 
             startNextCommand();
         }
@@ -340,10 +308,10 @@ public abstract class AutoBase extends OpMode {
         if(commandFirstLoop) {
             commandFirstLoop = false;
             targetAngle = currentCommand.angle;
-            robotAngleError = targetAngle - currentRobotAngle;
-            robotAngleError = ((((robotAngleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+            angleError = targetAngle - currentRobotAngle;
+            angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
         }
-        if(Math.abs(robotAngleError) < TOLERANCE) {
+        if(Math.abs(angleError) < ANGLE_ERROR_TOLERANCE) {
             startNextCommand();
         }
     }
@@ -352,26 +320,29 @@ public abstract class AutoBase extends OpMode {
      * Aims the robot at the target using a navigation image.
      */
     private void detectImage() {
-        if(count < 20) {
+        if(count < IMAGE_DETECTION_COUNT) {
             targetVisible = false;
             for (VuforiaTrackable trackable : allTrackables) {
                 if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                     targetVisible = true;
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+
+                    robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                     if (robotLocationTransform != null) {
                         lastLocation = robotLocationTransform;
                     }
+
                     break;
                 }
             }
             if (targetVisible) {
                 distanceFromImage += (lastLocation.getTranslation().get(2));
             } else {
-                distanceFromImage += 208.0;
+                distanceFromImage += DEFAULT_DISTANCE_FROM_IMAGE;
             }
             count ++;
         } else {
-            distanceFromImage /= 20;
+            distanceFromImage /= IMAGE_DETECTION_COUNT;
+
             startNextCommand();
         }
     }
@@ -380,7 +351,7 @@ public abstract class AutoBase extends OpMode {
      * Changes the elevator position.
      */
     private void elevator() {
-        if(time < 2) {
+        if(time < ELEVATOR_MOVE_TIME) {
             elevator.setPosition(currentCommand.elevatorPosition.positionValue);
         } else {
             startNextCommand();
@@ -393,7 +364,7 @@ public abstract class AutoBase extends OpMode {
     private void revShooter() {
         shooterReved = !shooterReved;
         if(shooterReved) {
-            shooter.setPower(.68 * -1);
+            shooter.setPower(SHOOTER_POWER * -1);
         } else {
             shooter.setPower(0.0);
         }
@@ -414,26 +385,109 @@ public abstract class AutoBase extends OpMode {
      */
     private void kicker() {
         if(time < 1) {
-            kicker.setPosition(0.8);
+            kicker.setPosition(KICKER_KICK_POSITION);
         } else {
             kicker.setPosition(1.0);
             startNextCommand();
         }
     }
 
-    protected double getAimAngle(double targetX) {
-        return allianceColor.direction * Math.atan((distanceFromImage - targetX) / 1828.8);
+    /**
+     * Detects how many rings there are.
+     */
+    private void detectRingNumber() {
+        switch(pipeline.getRingNumber()) {
+            case NONE:
+                newCommands = currentCommand.noRingsCommands;
+                break;
+            case ONE:
+                newCommands = currentCommand.oneRingCommands;
+                break;
+            case FOUR:
+                newCommands = currentCommand.fourRingsCommands;
+                break;
+        }
     }
 
     /**
-     * Starts the next command in the sequence.
+     * Corrects the target positions and powers of the wheels based on the angle error.
+     */
+    private void gyroCorrection() {
+        leftFrontTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        leftBackTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        rightFrontTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+        rightBackTargetPosition += angleError * TURNING_ENCODER_POSITION_SCALAR;
+
+        leftFrontPower += angleError * TURING_POWER_SCALAR;
+        leftBackPower += angleError * TURING_POWER_SCALAR;
+        rightFrontPower += angleError * TURING_POWER_SCALAR;
+        rightBackPower += angleError * TURING_POWER_SCALAR;
+    }
+
+    /**
+     * Sets the power and position of each wheel
+     */
+    private void setWheelPowersAndPositions() {
+        leftFront.setTargetPosition((int) Math.round(leftFrontTargetPosition));
+        leftBack.setTargetPosition((int) Math.round(leftBackTargetPosition));
+        rightFront.setTargetPosition((int) Math.round(rightFrontTargetPosition));
+        rightBack.setTargetPosition((int) Math.round(rightBackTargetPosition));
+
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
+    }
+
+    /**
+     * Returns the error between the angle the gyroscope sensor reads, and the target angle.
+     */
+    private void getAngleError() {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
+        currentRobotAngle = angles.firstAngle + allianceColor.angleOffset;
+        angleError = targetAngle - currentRobotAngle;
+        angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
+    }
+
+    /**
+     * If there are new commands, saves the current commands, and replaces them with the new ones.
+     */
+    private void newCommands() {
+        if(newCommands.size() != 0) {
+            upstreamCommands.add(0, currentCommands);
+            upstreamCommandIndexes.add(0, currentCommandIndex);
+            currentCommands = newCommands;
+            currentCommandIndex = 0;
+        }
+    }
+
+    /**
+     * Returns what angle the robot should aim at based on the target's x distance away from the
+     * image.
+     */
+    protected double getAimAngle(double targetX) {
+        return allianceColor.direction * Math.atan((distanceFromImage - targetX) / HALF_FIELD_DISTANCE);
+    }
+
+    /**
+     * Starts the next command in the sequence. If there are no commands left, checks if there are
+     * saved commands and goes through them in a first in last out sequence.
      */
     private void startNextCommand() {
-        commandIndex ++;
-        if (commandIndex < commands.size()) {
-            currentCommand = commands.get(commandIndex);
+        currentCommandIndex++;
+        if (currentCommandIndex < currentCommands.size()) {
+            currentCommand = currentCommands.get(currentCommandIndex);
+            leftFrontPower = 0;
+            leftBackPower = 0;
+            rightFrontPower = 0;
+            rightBackPower = 0;
             commandFirstLoop = true;
             resetStartTime();
+        } else if (upstreamCommands.size() > 0) {
+            currentCommands = upstreamCommands.get(0);
+            upstreamCommands.remove(0);
+            currentCommandIndex = upstreamCommandIndexes.get(0);
+            upstreamCommandIndexes.remove(0);
         }
     }
 

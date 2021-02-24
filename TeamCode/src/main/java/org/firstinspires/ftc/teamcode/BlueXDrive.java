@@ -30,6 +30,23 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
 @TeleOp(name="BlueXDrive")
 public class BlueXDrive extends OpMode {
 
+    private AllianceColor allianceColor;
+
+    //Motors and servos
+    private DcMotor leftFront;
+    private DcMotor leftBack;
+    private DcMotor rightFront;
+    private DcMotor rightBack;
+    private DcMotor bristles;
+    private Servo elevator;
+    private Servo kicker;
+    private DcMotor shooter;
+    private Servo funnelLeft;
+    private Servo funnelRight;
+    private Servo shooterLifterLeft;
+    private Servo shooterLifterRight;
+    private Servo conveyor;
+
     private boolean bPressed;
     private boolean xPressed;
     private boolean rightStickPressed;
@@ -49,22 +66,6 @@ public class BlueXDrive extends OpMode {
     private boolean aPressed;
     private boolean funnelDown;
 
-    //Motors and servos
-    private DcMotor leftFront;
-    private DcMotor leftBack;
-    private DcMotor rightFront;
-    private DcMotor rightBack;
-    private DcMotor bristles;
-    private Servo elevator;
-    private Servo kicker;
-    private DcMotor shooter;
-    private Servo funnelLeft;
-    private Servo funnelRight;
-    private Servo shooterLifterLeft;
-    private Servo shooterLifterRight;
-    private Servo conveyor;
-
-
     //Creating the variables for the gyro sensor
     private BNO055IMU imu;
 
@@ -76,8 +77,9 @@ public class BlueXDrive extends OpMode {
     private double robotAngleError;
 
     private OpenGLMatrix robotFromCamera;
-    private OpenGLMatrix robotLocationTransform;
     private OpenGLMatrix lastLocation;
+    private OpenGLMatrix robotLocationTransform;
+
     private VectorF robotPosition;
     private Orientation robotRotation;
 
@@ -88,33 +90,11 @@ public class BlueXDrive extends OpMode {
     private VuforiaLocalizer vuforia;
 
     VuforiaTrackables targetsUltimateGoal;
-
-    VuforiaTrackable blueTowerGoalTarget;
-    VuforiaTrackable redTowerGoalTarget;
-    VuforiaTrackable redAllianceTarget;
-    VuforiaTrackable blueAllianceTarget;
-    VuforiaTrackable frontWallTarget;
-
     List<VuforiaTrackable> allTrackables;
 
     public void init() {
 
-        angleOffset = -1 * Math.PI / 2;
-        currentRobotAngle = 0.0;
-
-        bPressed = false;
-        xPressed = false;
-        collectionIn = false;
-        collectionOut = false;
-
-        rightBumperPressed = false;
-        leftBumperPressed = false;
-        elevatorPositionIndex = 0;
-
-        shooterLifterTargetPosition = SHOOTER_LIFTER_DEFAULT_POSITION;
-
-        yPressed = false;
-        shooterRev = false;
+        allianceColor = AllianceColor.BLUE;
 
         /*Instantiating the motor and servo objects as their appropriate motor/servo in the
         configuration on the robot*/
@@ -132,6 +112,20 @@ public class BlueXDrive extends OpMode {
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
         funnelRight = hardwareMap.get(Servo.class, "funnelRight");
 
+        bPressed = false;
+        xPressed = false;
+        collectionIn = false;
+        collectionOut = false;
+
+        rightBumperPressed = false;
+        leftBumperPressed = false;
+        elevatorPositionIndex = 0;
+
+        shooterLifterTargetPosition = SHOOTER_LIFTER_DEFAULT_POSITION;
+
+        yPressed = false;
+        shooterRev = false;
+
         //Initializing the Revhub IMU
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
@@ -144,12 +138,15 @@ public class BlueXDrive extends OpMode {
 
         angles = null;
         currentRobotAngle = 0.0;
+        angleOffset = 0;
+        targetAngle = 0.0;
 
         robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, RADIANS, CAMERA_X_ROTATE, CAMERA_Y_ROTATE, CAMERA_Z_ROTATE));
-        robotLocationTransform = null;
         lastLocation = null;
+        robotLocationTransform = null;
+
         robotPosition = null;
         robotRotation = null;
 
@@ -164,26 +161,6 @@ public class BlueXDrive extends OpMode {
         vuforia = ClassFactory.getInstance().createVuforia(vuforiaParameters);
 
         targetsUltimateGoal = this.vuforia.loadTrackablesFromAsset("UltimateGoal");
-
-        VuforiaTrackable blueTowerGoalTarget = targetsUltimateGoal.get(0);
-        blueTowerGoalTarget.setName("Blue Tower Goal Target");
-        VuforiaTrackable redTowerGoalTarget = targetsUltimateGoal.get(1);
-        redTowerGoalTarget.setName("Red Tower Goal Target");
-        VuforiaTrackable redAllianceTarget = targetsUltimateGoal.get(2);
-        redAllianceTarget.setName("Red Alliance Target");
-        VuforiaTrackable blueAllianceTarget = targetsUltimateGoal.get(3);
-        blueAllianceTarget.setName("Blue Alliance Target");
-        VuforiaTrackable frontWallTarget = targetsUltimateGoal.get(4);
-        frontWallTarget.setName("Front Wall Target");
-
-        blueTowerGoalTarget.setLocation(OpenGLMatrix
-                .translation(0, 0, 0)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0 , 0)));
-
-        redTowerGoalTarget.setLocation(OpenGLMatrix
-                .translation(0, 0, 0)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, RADIANS, 0, 0, 0)));
-
         allTrackables = new ArrayList<>();
         allTrackables.addAll(targetsUltimateGoal);
 
@@ -199,9 +176,7 @@ public class BlueXDrive extends OpMode {
 
         telemetry.addData("angleOffset", angleOffset);
 
-        //Getting the angle of the robot from the IMU
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
-        currentRobotAngle = angles.firstAngle - angleOffset;
+        getAngle();
 
         recalibrateGyro();
 
@@ -220,13 +195,20 @@ public class BlueXDrive extends OpMode {
     }
 
     /**
+     * Gets the angle of the robot from the rev imu and subtracts the angle offset.
+     */
+    private void getAngle() {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
+        currentRobotAngle = angles.firstAngle - angleOffset;
+    }
+
+    /**
      * Sets the gyro angle offset based off of the current angle when the b button is pressed.
      */
     private void recalibrateGyro() {
         if(gamepad1.b) {
             angleOffset = angles.firstAngle;
         }
-
     }
 
     /**
@@ -248,7 +230,7 @@ public class BlueXDrive extends OpMode {
         double rightFrontPower;
         double rightBackPower;
 
-        if (Math.abs(gamepad1LeftStickX) >= TOLERANCE || Math.abs(gamepad1LeftStickY) >= TOLERANCE) {
+        if (Math.abs(gamepad1LeftStickX) >= CONTROLLER_TOLERANCE || Math.abs(gamepad1LeftStickY) >= CONTROLLER_TOLERANCE) {
 
             //Uses atan2 to convert the x and y values of the controller to an angle
             double gamepad1LeftStickAngle = Math.atan2(gamepad1LeftStickY, gamepad1LeftStickX);
@@ -276,13 +258,13 @@ public class BlueXDrive extends OpMode {
 
         /*Turning using exponential controls so that 50% of the trigger only controls 25% of the
         power while the other 50% controls the other 75%*/
-        if (gamepad1LeftTrigger >= TOLERANCE) {
+        if (gamepad1LeftTrigger >= CONTROLLER_TOLERANCE) {
             leftFrontPower += Math.pow(gamepad1LeftTrigger, 2);
             leftBackPower += Math.pow(gamepad1LeftTrigger, 2);
             rightFrontPower += Math.pow(gamepad1LeftTrigger, 2);
             rightBackPower += Math.pow(gamepad1LeftTrigger, 2);
         }
-        if (gamepad1RightTrigger >= TOLERANCE) {
+        if (gamepad1RightTrigger >= CONTROLLER_TOLERANCE) {
             leftFrontPower -= Math.pow(gamepad1RightTrigger, 2);
             leftBackPower -= Math.pow(gamepad1RightTrigger, 2);
             rightFrontPower -= Math.pow(gamepad1RightTrigger, 2);
@@ -296,15 +278,12 @@ public class BlueXDrive extends OpMode {
                     //telemetry.addData("Visible Target", trackable.getName());
                     targetVisible = true;
 
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                     if (robotLocationTransform != null) {
-
                         lastLocation = robotLocationTransform;
-
                     }
 
                     break;
-
                 }
             }
 
@@ -317,37 +296,16 @@ public class BlueXDrive extends OpMode {
                 robotRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, RADIANS);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotRotation.firstAngle, robotRotation.secondAngle, robotRotation.thirdAngle);
 
-                targetAngle = Math.atan((robotPosition.get(2) - 914) / 1828.8);
+                targetAngle = allianceColor.direction * Math.atan((robotPosition.get(2) - allianceColor.highGoalX) / HALF_FIELD_DISTANCE);
+                robotAngleError = targetAngle - angles.firstAngle + allianceColor.angleOffset;
+
                 telemetry.addData("Needed Robot Angle", targetAngle);
-                robotAngleError = targetAngle - angles.firstAngle;
                 telemetry.addData("Robot Angle Error", robotAngleError);
 
                 //leftFrontPower += robotAngleError;
                 //leftBackPower += robotAngleError;
                 //rightFrontPower += robotAngleError;
                 //rightBackPower += robotAngleError;
-
-                /*distanceFromImage = Math.sqrt(Math.pow(robotPosition.get(0),2) + Math.pow(robotPosition.get(2),2));
-
-                for (int i = 0; i < aimingLookupTable.length - 1; i++) {
-                    if (distanceFromImage >= aimingLookupTable[i][0] && distanceFromImage <= aimingLookupTable[i + 1][0]) {
-
-                        lowerLookupTableIndex = i;
-
-                        break;
-
-                    }
-                }
-
-                verticalAngleSlope = (aimingLookupTable[lowerLookupTableIndex + 1][1] - aimingLookupTable[lowerLookupTableIndex][1] / (aimingLookupTable[lowerLookupTableIndex + 1][0] - aimingLookupTable[lowerLookupTableIndex][0]));
-                verticalAngleYIntercept = aimingLookupTable[lowerLookupTableIndex][1] - verticalAngleSlope * aimingLookupTable[lowerLookupTableIndex][0];
-                neededVerticalAngle = (int) Math.round(verticalAngleSlope*distanceFromImage+verticalAngleYIntercept);
-                telemetry.addData("Needed Vertical Angle", neededVerticalAngle);*/
-
-                //telemetry.addData("Needed Cam Position", neededCamPosition);
-                //camMotor.setTargetPosition(neededCamPosition);
-
-                //telemetry.addData("Current Cam Motor Target Position", camMotor.getTargetPosition());
             }
         }
 
@@ -377,11 +335,11 @@ public class BlueXDrive extends OpMode {
 
         //Setting the funnels to the down position
         if (funnelDown) {
-            funnelLeft.setPosition(FUNNEL_LEFT_DOWN);
-            funnelRight.setPosition(FUNNEL_RIGHT_DOWN);
+            funnelLeft.setPosition(FUNNEL_DOWN);
+            funnelRight.setPosition(FUNNEL_DOWN);
         } else {
-            funnelLeft.setPosition(FUNNEL_LEFT_UP);
-            funnelRight.setPosition(FUNNEL_RIGHT_UP);
+            funnelLeft.setPosition(FUNNEL_UP);
+            funnelRight.setPosition(FUNNEL_UP);
         }
 
     }
@@ -508,8 +466,8 @@ public class BlueXDrive extends OpMode {
         double kickerPosition;
 
         //Calculates the kicker position
-        if(gamepad2RightTrigger > TOLERANCE) {
-            kickerPosition = 1.0 - (gamepad2RightTrigger * KICKER_REDUCTION);
+        if(gamepad2RightTrigger > CONTROLLER_TOLERANCE) {
+            kickerPosition = 1.0 - (gamepad2RightTrigger * KICKER_POSITION_SCALAR);
         } else {
             kickerPosition = 1.0;
         }
@@ -527,7 +485,7 @@ public class BlueXDrive extends OpMode {
         double gamepad2LeftStickY = gamepad2.left_stick_y;
 
         //Calculates the shooter target position.
-        if (Math.abs(gamepad2LeftStickY) > TOLERANCE) {
+        if (Math.abs(gamepad2LeftStickY) > CONTROLLER_TOLERANCE) {
             shooterLifterTargetPosition -= gamepad2LeftStickY * SHOOTER_LIFTER_REDUCTION;
             if (shooterLifterTargetPosition > SHOOTER_LIFTER_MAX_POSITION) {
                 shooterLifterTargetPosition = SHOOTER_LIFTER_MAX_POSITION;

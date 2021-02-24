@@ -12,7 +12,52 @@ import org.openftc.easyopencv.OpenCvPipeline;
 /**
  * Contains constants for all of the programs in one file for easy access.
  */
+
 public class Constants {
+    protected static final double TICKS_PER_FOOT = 759.12;
+    protected static final double HALF_FIELD_DISTANCE = 1828.8;
+
+    protected static final double CONTROLLER_TOLERANCE = 0.05;
+    protected static final double ANGLE_ERROR_TOLERANCE = 0.05;
+    protected static final double ENCODER_POSITION_TOLERANCE = 20.0;
+
+    protected enum AllianceColor {
+
+        BLUE(1, Math.PI/2, 914.0),
+        RED(-1, -1 * Math.PI/2, 300.0);
+
+        protected final int direction;
+        protected final double angleOffset;
+        protected final double highGoalX;
+
+        AllianceColor(int direction, double angleOffset, double highGoalX) {
+            this.direction = direction;
+            this.angleOffset = angleOffset;
+            this.highGoalX = highGoalX;
+        }
+
+    }
+
+    protected enum CommandType {
+
+        MOVE,
+        TURN,
+        ELEVATOR,
+        WAIT,
+        SHOOTER_REV,
+        DETECT_IMAGE,
+        KICKER,
+        DETECT_RING_NUMBER
+
+    }
+
+    public enum RingNumber {
+
+        NONE,
+        ONE,
+        FOUR
+
+    }
 
     protected static final String VUFORIA_KEY = "AaeF/Hb/////AAABmXyUA/dvl08Hn6O8IUco1axEjiRtYCVASe" +
             "XGzCnFiMaizR1b3cvD+SXpU1UHHbSpnyem0dMfGb6wce32IWKttH90xMTnLjY4aXBEYscpQbX/FzUi6uf5M+sXD" +
@@ -27,58 +72,19 @@ public class Constants {
     protected static final float CAMERA_Y_ROTATE = 0;
     protected static final float CAMERA_Z_ROTATE = 0;
 
-    protected enum AllianceColor {
-
-        BLUE(1),
-        RED(-1);
-
-        protected final int direction;
-
-        AllianceColor(int direction) { this.direction = direction; }
-
-    }
-
-    protected enum CommandType {
-
-        MOVE,
-        TURN,
-        ELEVATOR,
-        WAIT,
-        SHOOTER_REV,
-        DETECT_IMAGE,
-        KICKER
-
-    }
-
-    public enum RingNumber {
-
-        NONE,
-        ONE,
-        FOUR
-
-    }
+    protected static final int IMAGE_DETECTION_COUNT = 20;
+    protected static final double DEFAULT_DISTANCE_FROM_IMAGE = 208.0;
 
     static final Scalar GREEN = new Scalar(0, 255, 0);
+    protected static double REGION_WIDTH = 60;
+    protected static double REGION_HEIGHT = 60;
+    protected static int RESOLUTION_WIDTH = 1280;
 
-    static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(10,245);
-    static final int REGION_WIDTH = 60;
-    static final int REGION_HEIGHT = 60;
+    protected static final double TURNING_ENCODER_POSITION_SCALAR = 20.0;
+    protected static final double TURING_POWER_SCALAR = 3.0;
 
-    static final Point REGION1_POINTA = new Point(
-            REGION1_TOPLEFT_ANCHOR_POINT.x,
-            REGION1_TOPLEFT_ANCHOR_POINT.y);
-    static final Point REGION1_POINTB = new Point(
-            REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-            REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-    protected static final double TOLERANCE = 0.05;
-
-    protected static final double TURNING_REDUCTION = 1.0;
-
-    protected static final double FUNNEL_LEFT_DOWN = 0.3;
-    protected static final double FUNNEL_RIGHT_DOWN = 0.3;
-    protected static final double FUNNEL_LEFT_UP = 0.0;
-    protected static final double FUNNEL_RIGHT_UP = 0.0;
+    protected static final double FUNNEL_DOWN = 0.0;
+    protected static final double FUNNEL_UP = 0.0;
 
     protected static final double BRISTLES_DEFAULT_POWER = 0.6;
 
@@ -103,8 +109,10 @@ public class Constants {
         ElevatorPositions(double positionValue) { this.positionValue = positionValue; }
 
     }
+    protected static final double ELEVATOR_MOVE_TIME = 2.0;
 
-    protected static final double KICKER_REDUCTION = 0.3;
+    protected static final double KICKER_POSITION_SCALAR = 0.3;
+    protected static final double KICKER_KICK_POSITION = 0.8;
 
     protected static final double SHOOTER_LIFTER_MAX_POSITION = 0.8;
     protected static final double SHOOTER_LIFTER_MIN_POSITION = 0.2;
@@ -112,8 +120,5 @@ public class Constants {
     protected static final double SHOOTER_LIFTER_REDUCTION = .005;
 
     protected static final double SHOOTER_POWER = .70;
-
-    protected static final double TICKS_PER_FOOT = 759.12;
-    protected static final double ENCODER_TOLERANCE = 20.0;
 
 }
