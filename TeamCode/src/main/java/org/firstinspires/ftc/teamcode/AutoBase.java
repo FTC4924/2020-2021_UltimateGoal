@@ -138,6 +138,7 @@ public abstract class AutoBase extends OpMode {
         rightBackPower = 0;
 
         shooter = hardwareMap.get(DcMotor.class, "shooter");
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         elevator = hardwareMap.get(Servo.class, "elevator");
         elevator.setPosition(ElevatorPositions.MIDDLE.positionValue);
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
@@ -252,8 +253,6 @@ public abstract class AutoBase extends OpMode {
         gyroCorrection();
 
         setWheelPowersAndPositions();
-
-        newCommands();
     }
 
     /**
@@ -407,6 +406,7 @@ public abstract class AutoBase extends OpMode {
                 newCommands = currentCommand.fourRingsCommands;
                 break;
         }
+        startNextCommand();
     }
 
     /**
@@ -444,6 +444,7 @@ public abstract class AutoBase extends OpMode {
      */
     private void getAngleError() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, RADIANS);
+        //currentRobotAngle = angles.firstAngle;
         currentRobotAngle = angles.firstAngle + allianceColor.angleOffset;
         angleError = targetAngle - currentRobotAngle;
         angleError = ((((angleError - Math.PI) % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI)) - Math.PI;
@@ -453,11 +454,12 @@ public abstract class AutoBase extends OpMode {
      * If there are new commands, saves the current commands, and replaces them with the new ones.
      */
     private void newCommands() {
-        if(newCommands.size() != 0) {
+        if(newCommands != null) {
             upstreamCommands.add(0, currentCommands);
             upstreamCommandIndexes.add(0, currentCommandIndex);
             currentCommands = newCommands;
             currentCommandIndex = 0;
+            newCommands = null;
         }
     }
 
@@ -475,6 +477,7 @@ public abstract class AutoBase extends OpMode {
      */
     private void startNextCommand() {
         currentCommandIndex++;
+        newCommands();
         if (currentCommandIndex < currentCommands.size()) {
             currentCommand = currentCommands.get(currentCommandIndex);
             leftFrontPower = 0;
@@ -483,11 +486,21 @@ public abstract class AutoBase extends OpMode {
             rightBackPower = 0;
             commandFirstLoop = true;
             resetStartTime();
-        } else if (upstreamCommands.size() > 0) {
+        } else if (upstreamCommands.size() != 0) {
             currentCommands = upstreamCommands.get(0);
             upstreamCommands.remove(0);
             currentCommandIndex = upstreamCommandIndexes.get(0);
             upstreamCommandIndexes.remove(0);
+
+            if (currentCommandIndex < currentCommands.size()) {
+                currentCommand = currentCommands.get(currentCommandIndex);
+                leftFrontPower = 0;
+                leftBackPower = 0;
+                rightFrontPower = 0;
+                rightBackPower = 0;
+                commandFirstLoop = true;
+                resetStartTime();
+            }
         }
     }
 

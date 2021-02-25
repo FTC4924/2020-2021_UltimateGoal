@@ -13,8 +13,16 @@ import static org.firstinspires.ftc.teamcode.AutoBase.allianceColor;
 class RingDetectionPipeline extends OpenCvPipeline
 {
 
-    private static Point Region1PointA;
-    private static Point Region1PointB;
+    static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(10,245);
+    static final int REGION_WIDTH = 60;
+    static final int REGION_HEIGHT = 60;
+
+    static final Point REGION1_POINTA = new Point(
+            REGION1_TOPLEFT_ANCHOR_POINT.x,
+            REGION1_TOPLEFT_ANCHOR_POINT.y);
+    static final Point REGION1_POINTB = new Point(
+            REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
+            REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
 
     Mat region1_Cb;
     Mat YCrCb = new Mat();
@@ -32,23 +40,9 @@ class RingDetectionPipeline extends OpenCvPipeline
     @Override
     public void init(Mat firstFrame)
     {
-        Point region1CentralAnchorPoint;
-        if(allianceColor == AllianceColor.RED) {
-            region1CentralAnchorPoint = new Point(10,245);
-        } else {
-            region1CentralAnchorPoint = new Point(RESOLUTION_WIDTH - 10,245);
-        }
-
-        Region1PointA = new Point(
-                region1CentralAnchorPoint.x - REGION_WIDTH/2,
-                region1CentralAnchorPoint.y - REGION_WIDTH/2);
-        Region1PointB = new Point(
-                region1CentralAnchorPoint.x + REGION_WIDTH/2,
-                region1CentralAnchorPoint.y + REGION_HEIGHT/2);
-
         inputToCb(firstFrame);
 
-        region1_Cb = Cb.submat(new Rect(Region1PointA, Region1PointB));
+        region1_Cb = Cb.submat(new Rect(REGION1_POINTA, REGION1_POINTB));
     }
 
     @Override
@@ -68,8 +62,8 @@ class RingDetectionPipeline extends OpenCvPipeline
 
         Imgproc.rectangle(
                 input, // Buffer to draw on
-                Region1PointA, // First point which defines the rectangle
-                Region1PointB, // Second point which defines the rectangle
+                REGION1_POINTA, // First point which defines the rectangle
+                REGION1_POINTB, // Second point which defines the rectangle
                 GREEN, // The color the rectangle is drawn in
                 2); // Thickness of the rectangle lines
 

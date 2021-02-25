@@ -107,6 +107,7 @@ public class BlueXDrive extends OpMode {
         elevator = hardwareMap.get(Servo.class, "elevator");
         kicker = hardwareMap.get(Servo.class, "kicker");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterLifterLeft = hardwareMap.get(Servo.class, "shooterLeft");
         shooterLifterRight = hardwareMap.get(Servo.class, "shooterRight");
         funnelLeft = hardwareMap.get(Servo.class, "funnelLeft");
