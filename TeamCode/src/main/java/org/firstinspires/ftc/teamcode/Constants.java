@@ -23,7 +23,7 @@ public class Constants {
 
     protected enum AllianceColor {
 
-        BLUE(1, -1 * Math.PI/2, 914.0),
+        BLUE(1, 0, 914.0),
         RED(-1, Math.PI/2, 300.0);
 
         protected final int direction;

@@ -14,8 +14,8 @@ import static org.firstinspires.ftc.teamcode.Constants.*;
  * Created by Brendan Clark on 09/24/2020 at 12:01 PM.
  */
 
-@Autonomous(name = "BluePowerShots")
-public class BluePowerShots extends AutoBase {
+@Autonomous(name = "BluePowerShotsInner")
+public class BluePowerShotsInner extends AutoBase {
     protected AllianceColor getAllianceColor() {
         return AllianceColor.BLUE;
     }
@@ -38,7 +38,9 @@ public class BluePowerShots extends AutoBase {
                         new Command(CommandType.SHOOTER_REV),
                         new Command(CommandType.ELEVATOR, ElevatorPositions.DOWN),
                         new Command(CommandType.TURN, AngleUnit.DEGREES, 0.0),
-                        new Command(CommandType.MOVE, AngleUnit.DEGREES, 1.1, 0.0, 1.0)
+                        new Command(CommandType.MOVE, AngleUnit.DEGREES, 2.9, 0.0, 1.0),
+                        new Command(CommandType.MOVE, AngleUnit.DEGREES, 2, 180.0, 1.0),
+                        new Command(CommandType.MOVE, AngleUnit.DEGREES, 4.0, -90.0, 1.0)
                         //TODO Add a turn to 0 at the end
                         //TODO "If we get the elevator junk working the shooter junk is consistently shooting well"-Brendan, 2021
 
